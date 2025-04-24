@@ -4,6 +4,8 @@ import 'Screen/track_running_screen.dart';
 import 'Screen/track_swimming_screen.dart';
 import 'Screen/track_cycling_screen.dart';
 
+// Entry point for the Flutter application
+// TODO: Initialize Firebase and configure the app here
 void main() {
   runApp(const MainApp());
 }
