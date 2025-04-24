@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'Screen/result_screen.dart';
+import 'Screen/track_running_screen.dart';
+import 'Screen/track_swimming_screen.dart';
+import 'Screen/track_cycling_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,11 +14,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+      home: TrackCyclingScreen(),
     );
   }
 }
