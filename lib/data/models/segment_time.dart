@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+enum Segment { run, swim, cycle }
+
 class SegmentTime {
   final String participantId;
-  final String segment; // run, swim, cycle
+  final Segment segment;
   final Duration time;
   final DateTime recordedAt;
 
@@ -13,17 +15,55 @@ class SegmentTime {
     required this.recordedAt,
   });
 
-  factory SegmentTime.fromJson(Map<String, dynamic> json) => SegmentTime(
+  factory SegmentTime.fromJson(Map<String, dynamic> json) {
+    try {
+      return SegmentTime(
         participantId: json['participantId'],
-        segment: json['segment'],
+        segment: Segment.values
+            .firstWhere((e) => e.toString().split('.').last == json['segment']),
         time: Duration(seconds: json['time']),
         recordedAt: (json['recordedAt'] as Timestamp).toDate(),
       );
+    } catch (e) {
+      throw FormatException('Invalid JSON format for SegmentTime: $e');
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         'participantId': participantId,
-        'segment': segment,
+        'segment': segment.toString().split('.').last,
         'time': time.inSeconds,
         'recordedAt': Timestamp.fromDate(recordedAt),
       };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SegmentTime &&
+          runtimeType == other.runtimeType &&
+          participantId == other.participantId &&
+          segment == other.segment &&
+          time == other.time &&
+          recordedAt == other.recordedAt;
+
+  @override
+  int get hashCode =>
+      participantId.hashCode ^
+      segment.hashCode ^
+      time.hashCode ^
+      recordedAt.hashCode;
+
+  SegmentTime copyWith({
+    String? participantId,
+    Segment? segment,
+    Duration? time,
+    DateTime? recordedAt,
+  }) {
+    return SegmentTime(
+      participantId: participantId ?? this.participantId,
+      segment: segment ?? this.segment,
+      time: time ?? this.time,
+      recordedAt: recordedAt ?? this.recordedAt,
+    );
+  }
 }

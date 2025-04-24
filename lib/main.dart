@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'Screen/result_screen.dart';
-import 'Screen/track_running_screen.dart';
-import 'Screen/track_swimming_screen.dart';
-import 'Screen/track_cycling_screen.dart';
+import 'screen/result_screen.dart';
+import 'screen/track_running_screen.dart';
+import 'screen/track_swimming_screen.dart';
+import 'screen/track_cycling_screen.dart';
 
 // Entry point for the Flutter application
 // TODO: Initialize Firebase and configure the app here
