@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'screen/result_screen.dart';
-import 'screen/track_running_screen.dart';
-import 'screen/track_swimming_screen.dart';
-import 'screen/track_cycling_screen.dart';
+import 'screens/result_screen.dart';
+import 'screens/track_running_screen.dart';
+import 'screens/track_swimming_screen.dart';
+import 'screens/track_cycling_screen.dart';
 
-// Entry point for the Flutter application
-// TODO: Initialize Firebase and configure the app here
 void main() {
   runApp(const MainApp());
 }
@@ -15,8 +13,20 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: TrackCyclingScreen(),
+    return MaterialApp(
+      title: 'Race Tracking App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const ResultScreen(),
+        '/running': (context) => const TrackRunningScreen(),
+        '/swimming': (context) => const TrackSwimmingScreen(),
+        '/cycling': (context) => const TrackCyclingScreen(),
+      },
+      debugShowCheckedModeBanner: false,
     );
   }
 }
