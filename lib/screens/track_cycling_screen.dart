@@ -15,7 +15,7 @@ class _TrackCyclingScreenState extends State<TrackCyclingScreen> {
   Duration duration = const Duration(hours: 1, minutes: 23, seconds: 1, milliseconds: 80);
   bool isRunning = false;
   int _currentIndex = 2;
-
+  
   final List<Map<String, String>> participants = List.generate(
     6,
     (index) => {

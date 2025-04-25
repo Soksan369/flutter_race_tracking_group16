@@ -10,23 +10,42 @@ class BottomNavBar extends StatelessWidget {
     required this.onTap,
   });
 
+  void _navigate(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/running');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/swimming');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/cycling');
+        break;
+      default:
+        Navigator.pushReplacementNamed(context, '/');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: currentIndex,
-      onTap: onTap,
+      onTap: (index) {
+        onTap(index);
+        _navigate(context, index);
+      },
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
           icon: Icon(Icons.directions_run),
-          label: 'Track',
+          label: 'Running',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
+          icon: Icon(Icons.pool),
+          label: 'Swimming',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.directions_bike),
+          label: 'Cycling',
         ),
       ],
     );
