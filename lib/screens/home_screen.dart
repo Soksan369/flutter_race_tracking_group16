@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
           const HomeTitleSection(),
           HomeStartButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/');
+              Navigator.pushNamed(context, '/running');
             },
           ),
         ],
