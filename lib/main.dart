@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/home_screen.dart';
 import 'screens/result_screen.dart';
 import 'screens/track_running_screen.dart';
 import 'screens/track_swimming_screen.dart';
@@ -21,7 +22,8 @@ class MainApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const ResultScreen(),
+        '/': (context) => const HomeScreen(),
+        '/result': (context) => const ResultScreen(),
         '/running': (context) => const TrackRunningScreen(),
         '/swimming': (context) => const TrackSwimmingScreen(),
         '/cycling': (context) => const TrackCyclingScreen(),

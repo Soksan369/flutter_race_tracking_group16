@@ -3,7 +3,7 @@ import '../widgets/result_category_tabs.dart';
 import '../widgets/result_search_bar.dart';
 import '../widgets/result_table_header.dart';
 import '../widgets/result_table_rows.dart';
-import '../widgets/result_bottom_nav_bar.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -65,10 +65,12 @@ class _ResultScreenState extends State<ResultScreen> {
             Expanded(
               child: ResultTableRows(results: results),
             ),
-            // Bottom Navigation Bar
-            const ResultBottomNavBar(),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 3, // Results tab index
+        onTap: (_) {},
       ),
     );
   }
