@@ -1,0 +1,115 @@
+{
+    "races": {
+      "race1": {
+        "id": "race1",
+        "name": "Triathlon 2025",
+        "startTime": "2025-04-29T08:00:00Z",
+        "status": "Started"
+      },
+      "race2": {
+        "id": "race2",
+        "name": "Marathon Challenge",
+        "startTime": "2025-05-15T07:00:00Z",
+        "status": "NotStarted"
+      }
+    },
+    "participants": {
+      "race1": {
+        "p101": {
+          "id": "p101",
+          "bib": 101,
+          "name": "Sok Sothy",
+          "segment": "swim",
+          "completed": false,
+          "completedSegments": {
+            "run": true,
+            "swim": false,
+            "cycle": false
+          }
+        },
+        "p102": {
+          "id": "p102",
+          "bib": 102,
+          "name": "Uch Mengly",
+          "segment": "cycle",
+          "completed": false,
+          "completedSegments": {
+            "run": true,
+            "swim": true,
+            "cycle": false
+          }
+        },
+        "p103": {
+          "id": "p103",
+          "bib": 103,
+          "name": "Rith Kunthea",
+          "segment": "cycle",
+          "completed": true,
+          "completedSegments": {
+            "run": true,
+            "swim": true,
+            "cycle": true
+          }
+        }
+      }
+    },
+    "segmentTimes": {
+      "race1": {
+        "p101": {
+          "run": {
+            "time": 3600,
+            "recordedAt": "2025-04-29T08:30:00Z"
+          }
+        },
+        "p102": {
+          "run": {
+            "time": 3450,
+            "recordedAt": "2025-04-29T08:25:00Z"
+          },
+          "swim": {
+            "time": 1800,
+            "recordedAt": "2025-04-29T09:15:00Z"
+          }
+        },
+        "p103": {
+          "run": {
+            "time": 3300,
+            "recordedAt": "2025-04-29T08:20:00Z"
+          },
+          "swim": {
+            "time": 1750,
+            "recordedAt": "2025-04-29T09:05:00Z"
+          },
+          "cycle": {
+            "time": 4200,
+            "recordedAt": "2025-04-29T10:20:00Z"
+          }
+        }
+      }
+    },
+    "results": {
+      "race1": {
+        "p103": {
+          "participantId": "p103",
+          "bib": 103,
+          "name": "Rith Kunthea",
+          "totalTime": 9250,
+          "rank": 1
+        },
+        "p102": {
+          "participantId": "p102",
+          "bib": 102,
+          "name": "Uch Mengly", 
+          "totalTime": null,
+          "rank": null
+        },
+        "p101": {
+          "participantId": "p101",
+          "bib": 101,
+          "name": "Sok Sothy",
+          "totalTime": null,
+          "rank": null
+        }
+      }
+    }
+  }

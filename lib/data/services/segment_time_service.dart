@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/segment_time.dart';
 
 class SegmentTimeService {
-  final String apiBaseUrl = 'https://your-api-url.com/api';
+  final String apiBaseUrl = 'https://flutter-fire-base-2ac06-default-rtdb.asia-southeast1.firebasedatabase.app/';
   final http.Client _client;
 
   SegmentTimeService({http.Client? client}) : _client = client ?? http.Client();
