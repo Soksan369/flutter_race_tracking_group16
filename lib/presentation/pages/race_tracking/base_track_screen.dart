@@ -4,14 +4,20 @@ import '../../../data/models/participant.dart';
 import '../../../data/models/segment_time.dart';
 import '../../../data/repositories/participant_repository.dart';
 import '../../../data/services/segment_time_service.dart';
-import '../../widgets/timer_display.dart';
-import '../../widgets/participant_list_item.dart';
+import '../../../data/services/participant_progression_service.dart';
+import '../../../services/navigation_service.dart';
+import '../../../services/timer_service.dart';
+import '../../widgets/timer_section.dart';
+import '../../widgets/search_bar_widget.dart';
+import '../../widgets/participants_section.dart';
+import '../../widgets/race_navigation_bar.dart';
 
 abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
-  // Timer variables
-  Duration _elapsed = Duration.zero;
-  Timer? _timer;
-  bool _isRunning = false;
+  // Services
+  late final TimerService _timerService;
+  late final ParticipantRepository _participantRepo;
+  late final SegmentTimeService _segmentTimeService;
+  late final ParticipantProgressionService _progressionService;
 
   // Participants list
   List<Participant> _participants = [];
@@ -19,10 +25,6 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
 
   // Search functionality
   final TextEditingController _searchController = TextEditingController();
-
-  // Services
-  late final ParticipantRepository _participantRepo;
-  late final SegmentTimeService _segmentTimeService;
 
   // Abstract properties
   String get title;
@@ -32,11 +34,13 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
   @override
   void initState() {
     super.initState();
+    _timerService = TimerService();
     _participantRepo = ParticipantRepository();
     _segmentTimeService = SegmentTimeService();
-    _loadParticipants();
+    _progressionService =
+        ParticipantProgressionService(participantRepo: _participantRepo);
 
-    // Add listener for search functionality
+    _loadParticipants();
     _searchController.addListener(_filterParticipants);
   }
 
@@ -57,14 +61,12 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
 
   Future<void> _loadParticipants() async {
     // For now, let's use dummy data since we might not have backend setup
-    // In a real app, you would do:
-    // final participants = await _participantRepo.getParticipantsBySegment(segment.toString().split('.').last);
     final participants = List.generate(
       6,
       (index) => Participant(
-        id: '101',
-        bib: 101,
-        name: 'Sok Sothy',
+        id: '101${index}',
+        bib: 101 + index,
+        name: 'Sok Sothy ${index + 1}',
         segment: segment.toString().split('.').last,
         completed: false,
       ),
@@ -76,78 +78,102 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     });
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _searchController.dispose();
-    super.dispose();
-  }
+  void _markParticipantCompleted(String participantId) async {
+    final index = _participants.indexWhere((p) => p.id == participantId);
+    if (index == -1) return;
 
-  void _toggleTimer() {
-    if (_isRunning) {
-      _stopTimer();
-    } else {
-      _startTimer();
+    // Get participant
+    final participant = _participants[index];
+
+    // Record segment time
+    await _recordSegmentTime(participant.id);
+
+    // Move to next segment
+    final updatedParticipant = await _progressionService.moveToNextSegment(
+        participant, _timerService.elapsed);
+
+    if (updatedParticipant != null) {
+      setState(() {
+        // Remove from current list
+        _participants.removeAt(index);
+        _filteredParticipants = List.from(_participants);
+
+        // Show transition message
+        _showTransitionMessage(participant, updatedParticipant);
+      });
     }
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      setState(() {
-        _elapsed += const Duration(milliseconds: 100);
-      });
-    });
-
-    setState(() {
-      _isRunning = true;
-    });
-  }
-
-  void _stopTimer() {
-    _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-    });
-  }
-
-  void _resetTimer() {
-    _stopTimer();
-    setState(() {
-      _elapsed = Duration.zero;
-    });
-  }
-
-  void _markParticipantCompleted(String participantId) {
-    setState(() {
-      final index = _participants.indexWhere((p) => p.id == participantId);
-      if (index != -1) {
-        // In a real app, you'd update this in your database
-        final participant = _participants[index];
-        _participants[index] = Participant(
-          id: participant.id,
-          bib: participant.bib,
-          name: participant.name,
-          segment: participant.segment,
-          completed: true,
-        );
-
-        // Record segment time
-        _recordSegmentTime(participant.id);
-      }
-    });
-  }
-
-  void _recordSegmentTime(String participantId) {
+  Future<void> _recordSegmentTime(String participantId) async {
     // In a real app, you'd save this to your database
     final segmentTime = SegmentTime(
       participantId: participantId,
       segment: segment,
-      time: _elapsed,
+      time: _timerService.elapsed,
       recordedAt: DateTime.now(),
     );
 
     // For now just log it
     debugPrint('Recorded segment time: ${segmentTime.toJson()}');
+  }
+
+  void _showTransitionMessage(
+      Participant oldParticipant, Participant updatedParticipant) {
+    final String nextSegmentName;
+
+    if (updatedParticipant.segment == 'swim') {
+      nextSegmentName = 'Swimming';
+    } else if (updatedParticipant.segment == 'cycle') {
+      nextSegmentName = 'Cycling';
+    } else {
+      // All segments completed - show immediate toast
+      ScaffoldMessenger.of(context)
+          .hideCurrentSnackBar(); // Hide any existing snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${oldParticipant.name} has completed all segments'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(8),
+          duration: const Duration(seconds: 1), // Shorter duration
+          animation: null, // Remove animation for immediate appearance
+        ),
+      );
+      return;
+    }
+
+    // Show immediate notification
+    ScaffoldMessenger.of(context)
+        .hideCurrentSnackBar(); // Hide any existing snackbar
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${oldParticipant.name} moved to $nextSegmentName'),
+        backgroundColor: Colors.blue,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(8),
+        duration: const Duration(milliseconds: 800), // Very short duration
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        animation: null, // Remove animation for immediate appearance
+      ),
+    );
+  }
+
+  void navigateToPage(int index) {
+    if ((index == 0 && segment == Segment.run) ||
+        (index == 1 && segment == Segment.swim) ||
+        (index == 2 && segment == Segment.cycle)) {
+      return;
+    }
+
+    String route = NavigationService.getRouteForIndex(index);
+    Navigator.pushReplacementNamed(context, route);
+  }
+
+  @override
+  void dispose() {
+    _timerService.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -158,226 +184,49 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            // Title
-            _buildHeaderSection(),
-            const SizedBox(height: 24),
-            // Timer display
-            _buildTimerSection(),
-            const SizedBox(height: 24),
-            // Search bar
-            _buildSearchBar(),
-            const SizedBox(height: 16),
-            // Participants list
-            _buildParticipantsSection(),
-          ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-    );
-  }
-
-  Widget _buildHeaderSection() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          '$title ',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Icon(icon, size: 22),
-      ],
-    );
-  }
-
-  Widget _buildTimerSection() {
-    return Column(
-      children: [
-        // Timer display
-        TimerDisplay(duration: _elapsed, fontSize: 52),
-
-        const SizedBox(height: 20),
-
-        // Timer controls
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: _isRunning ? _stopTimer : _startTimer,
-              icon: Icon(_isRunning ? Icons.stop : Icons.play_arrow),
-              label: Text(_isRunning ? 'Stop' : 'Start'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _isRunning
-                    ? const Color(0xFFFF3B30)
-                    : const Color(0xFF4CD964),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                minimumSize: const Size(100, 45),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-            ),
-            const SizedBox(width: 16),
-            ElevatedButton.icon(
-              onPressed: _resetTimer,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reset'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[300],
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                minimumSize: const Size(100, 45),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: TextField(
-          controller: _searchController,
-          decoration: InputDecoration(
-            hintText: 'Search',
-            hintStyle: TextStyle(color: Colors.grey[500]),
-            prefixIcon: Icon(Icons.search, color: Colors.grey[500]),
-            suffixIcon: IconButton(
-              icon: Icon(Icons.clear, color: Colors.grey[500]),
-              onPressed: () {
-                _searchController.clear();
-                FocusScope.of(context).unfocus();
-              },
-            ),
-            border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 15),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildParticipantsSection() {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
+            // Header section with title and icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.people, size: 20),
-                const SizedBox(width: 8),
                 Text(
-                  'Participant',
+                  '$title ',
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 22,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+                Icon(icon, size: 22),
               ],
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredParticipants.length,
-              itemBuilder: (context, index) {
-                final participant = _filteredParticipants[index];
-                return ParticipantListItem(
-                  participant: participant,
-                  onComplete: () => _markParticipantCompleted(participant.id),
+            const SizedBox(height: 24),
+            // Timer display and controls
+            AnimatedBuilder(
+              animation: _timerService,
+              builder: (context, _) {
+                return TimerSection(
+                  elapsed: _timerService.elapsed,
+                  isRunning: _timerService.isRunning,
+                  onStartStop: _timerService.toggle,
+                  onReset: _timerService.reset,
                 );
               },
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            // Search bar
+            SearchBarWidget(controller: _searchController),
+            const SizedBox(height: 16),
+            // Participants list
+            ParticipantsSection(
+              participants: _filteredParticipants,
+              onComplete: _markParticipantCompleted,
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: RaceNavigationBar(
+        currentIndex: NavigationService.getNavigationIndex(segment),
+        onTap: navigateToPage,
       ),
     );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return BottomNavigationBar(
-      currentIndex: getNavigationIndex(),
-      onTap: (index) => navigateToPage(index),
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.black,
-      unselectedItemColor: Colors.grey,
-      showUnselectedLabels: true,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_run),
-          label: 'Running',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.pool),
-          label: 'Swimming',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_bike),
-          label: 'Cycling',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart),
-          label: 'Results',
-        ),
-      ],
-    );
-  }
-
-  int getNavigationIndex() {
-    switch (segment) {
-      case Segment.run:
-        return 0;
-      case Segment.swim:
-        return 1;
-      case Segment.cycle:
-        return 2;
-      default:
-        return 0;
-    }
-  }
-
-  void navigateToPage(int index) {
-    if ((index == 0 && segment == Segment.run) ||
-        (index == 1 && segment == Segment.swim) ||
-        (index == 2 && segment == Segment.cycle)) {
-      return;
-    }
-
-    String route;
-    switch (index) {
-      case 0:
-        route = '/running';
-        break;
-      case 1:
-        route = '/swimming';
-        break;
-      case 2:
-        route = '/cycling';
-        break;
-      case 3:
-        route = '/result';
-        break;
-      default:
-        route = '/';
-    }
-
-    Navigator.pushReplacementNamed(context, route);
   }
 }
