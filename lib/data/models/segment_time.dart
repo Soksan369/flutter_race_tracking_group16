@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 enum Segment { run, swim, cycle }
 
 class SegmentTime {
@@ -22,7 +20,7 @@ class SegmentTime {
         segment: Segment.values
             .firstWhere((e) => e.toString().split('.').last == json['segment']),
         time: Duration(seconds: json['time']),
-        recordedAt: (json['recordedAt'] as Timestamp).toDate(),
+        recordedAt: DateTime.parse(json['recordedAt']),
       );
     } catch (e) {
       throw FormatException('Invalid JSON format for SegmentTime: $e');
@@ -33,7 +31,7 @@ class SegmentTime {
         'participantId': participantId,
         'segment': segment.toString().split('.').last,
         'time': time.inSeconds,
-        'recordedAt': Timestamp.fromDate(recordedAt),
+        'recordedAt': recordedAt.toIso8601String(),
       };
 
   @override

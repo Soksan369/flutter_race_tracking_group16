@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Race {
   final String id;
   final String name;
@@ -16,14 +14,14 @@ class Race {
   factory Race.fromJson(Map<String, dynamic> json) => Race(
         id: json['id'],
         name: json['name'],
-        startTime: (json['startTime'] as Timestamp).toDate(),
+        startTime: DateTime.parse(json['startTime']),
         status: json['status'],
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
-        'startTime': Timestamp.fromDate(startTime),
+        'startTime': startTime.toIso8601String(),
         'status': status,
       };
 }
