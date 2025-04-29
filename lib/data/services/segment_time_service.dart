@@ -1,27 +1,28 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../models/segment_time.dart';
+import 'firebase_http_service.dart';
 
 class SegmentTimeService {
-  final String apiBaseUrl = 'https://flutter-fire-base-2ac06-default-rtdb.asia-southeast1.firebasedatabase.app/';
-  final http.Client _client;
+  final FirebaseHttpService _firebaseService;
+  final String _currentRaceId =
+      'race1'; // In a real app, this would be configurable
 
-  SegmentTimeService({http.Client? client}) : _client = client ?? http.Client();
+  SegmentTimeService({FirebaseHttpService? firebaseService})
+      : _firebaseService = firebaseService ?? FirebaseHttpService();
 
   Future<bool> recordSegmentTime(SegmentTime segmentTime) async {
     try {
-      final response = await _client.post(
-        Uri.parse('$apiBaseUrl/segment_times'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(segmentTime.toJson()),
+      final segmentString = segmentTime.segment.toString().split('.').last;
+
+      // In Firebase, segment times are stored by participant > segment
+      await _firebaseService.put(
+        'segmentTimes/$_currentRaceId/${segmentTime.participantId}/$segmentString',
+        {
+          'time': segmentTime.time.inSeconds,
+          'recordedAt': segmentTime.recordedAt.toIso8601String(),
+        },
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        return true;
-      } else {
-        print('Error recording segment time: ${response.statusCode}');
-        return false;
-      }
+      return true;
     } catch (e) {
       print('Error recording segment time: $e');
       return false;
@@ -31,18 +32,27 @@ class SegmentTimeService {
   Future<List<SegmentTime>> getSegmentTimesForParticipant(
       String participantId) async {
     try {
-      final response = await _client.get(
-        Uri.parse('$apiBaseUrl/segment_times?participantId=$participantId'),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final data = await _firebaseService
+          .get('segmentTimes/$_currentRaceId/$participantId');
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((item) => SegmentTime.fromJson(item)).toList();
-      } else {
-        print('Error fetching segment times: ${response.statusCode}');
-        return [];
+      final List<SegmentTime> times = [];
+      if (data != null) {
+        data.forEach((segmentKey, value) {
+          final segment = Segment.values.firstWhere(
+            (s) => s.toString().split('.').last == segmentKey,
+            orElse: () => Segment.run,
+          );
+
+          times.add(SegmentTime(
+            participantId: participantId,
+            segment: segment,
+            time: Duration(seconds: value['time']),
+            recordedAt: DateTime.parse(value['recordedAt']),
+          ));
+        });
       }
+
+      return times;
     } catch (e) {
       print('Error fetching segment times: $e');
       return [];

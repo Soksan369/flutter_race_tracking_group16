@@ -1,4 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/result_provider.dart';
+import '../../../utils/formatters.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -11,16 +15,34 @@ class _ResultScreenState extends State<ResultScreen> {
   int selectedCategory = 0;
   final List<String> categories = ['All', 'Running', 'Swimming', 'Cycling'];
   TextEditingController searchController = TextEditingController();
+  Timer? _refreshTimer;
 
-  final List<Map<String, String>> results = List.generate(
-    10,
-    (index) => {
-      'rank': index < 2 ? (index + 1).toString() : '3',
-      'name': 'Sok Sothy',
-      'time': '12:23:01',
-      'id': '101',
-    },
-  );
+  @override
+  void initState() {
+    super.initState();
+    searchController.addListener(() {
+      setState(() {});
+    });
+
+    // Load results when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ResultProvider>(context, listen: false).loadResults();
+    });
+
+    // Set up polling for updates
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        Provider.of<ResultProvider>(context, listen: false).loadResults();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,60 +190,102 @@ class _ResultScreenState extends State<ResultScreen> {
 
             // Results list
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: results.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final item = results[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            item['rank']!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
+              child: Consumer<ResultProvider>(
+                builder: (context, resultProvider, child) {
+                  if (resultProvider.isLoading &&
+                      resultProvider.results.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (resultProvider.error != null &&
+                      resultProvider.results.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            resultProvider.error!,
+                            style: TextStyle(color: Colors.red[700]),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            item['name']!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => resultProvider.loadResults(),
+                            child: const Text('Retry'),
                           ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  final filteredResults = resultProvider.getFilteredResults(
+                    searchController.text,
+                    categories[selectedCategory],
+                  );
+
+                  if (filteredResults.isEmpty) {
+                    return const Center(
+                      child: Text('No results found'),
+                    );
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: filteredResults.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final result = filteredResults[index];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
                         ),
-                        SizedBox(
-                          width: 100,
-                          child: Text(
-                            item['time']!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                result.rank.toString(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            item['id']!,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
+                            Expanded(
+                              child: Text(
+                                result.name,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             ),
-                          ),
+                            SizedBox(
+                              width: 100,
+                              child: Text(
+                                formatDuration(result.totalTime),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              child: Text(
+                                result.bib.toString(),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 },
               ),
@@ -230,11 +294,5 @@ class _ResultScreenState extends State<ResultScreen> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    searchController.dispose();
-    super.dispose();
   }
 }

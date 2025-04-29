@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^1.1.0  # Added for HTTP requests
+  provider: ^6.1.1  # Added for state management
   # cloud_firestore: ^4.8.0  # Commented out
   # firebase_core: ^2.24.2  # Commented out
 

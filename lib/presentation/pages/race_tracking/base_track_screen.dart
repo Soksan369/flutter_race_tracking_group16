@@ -1,178 +1,138 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../data/models/participant.dart';
 import '../../../data/models/segment_time.dart';
-import '../../../data/repositories/participant_repository.dart';
-import '../../../data/services/segment_time_service.dart';
-import '../../../data/services/participant_progression_service.dart';
 import '../../../services/navigation_service.dart';
-import '../../../services/timer_service.dart';
+import '../../../providers/participant_provider.dart';
+import '../../../providers/timer_provider.dart';
+import '../../../providers/segment_time_provider.dart';
+import '../../../providers/result_provider.dart';
 import '../../widgets/timer_section.dart';
 import '../../widgets/search_bar_widget.dart';
 import '../../widgets/participants_section.dart';
 import '../../widgets/race_navigation_bar.dart';
 
 abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
-  // Services
-  late final TimerService _timerService;
-  late final ParticipantRepository _participantRepo;
-  late final SegmentTimeService _segmentTimeService;
-  late final ParticipantProgressionService _progressionService;
-
-  // Participants list
-  List<Participant> _participants = [];
-  List<Participant> _filteredParticipants = [];
-
-  // Search functionality
-  final TextEditingController _searchController = TextEditingController();
-
   // Abstract properties
   String get title;
   IconData get icon;
   Segment get segment;
 
+  // Search functionality
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
-    _timerService = TimerService();
-    _participantRepo = ParticipantRepository();
-    _segmentTimeService = SegmentTimeService();
-    _progressionService =
-        ParticipantProgressionService(participantRepo: _participantRepo);
+    _searchController.addListener(_onSearchChanged);
 
-    _loadParticipants();
-    _searchController.addListener(_filterParticipants);
-  }
+    // Load participants when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadParticipants();
+    });
 
-  void _filterParticipants() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredParticipants = List.from(_participants);
-      } else {
-        _filteredParticipants = _participants
-            .where((p) =>
-                p.name.toLowerCase().contains(query) ||
-                p.bib.toString().contains(query))
-            .toList();
+    // Set up polling for updates
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _loadParticipants();
       }
     });
   }
 
-  Future<void> _loadParticipants() async {
-    // For now, let's use dummy data since we might not have backend setup
-    final participants = List.generate(
-      6,
-      (index) => Participant(
-        id: '101${index}',
-        bib: 101 + index,
-        name: 'Sok Sothy ${index + 1}',
-        segment: segment.toString().split('.').last,
-        completed: false,
-      ),
-    );
-
+  void _onSearchChanged() {
     setState(() {
-      _participants = participants;
-      _filteredParticipants = List.from(participants);
+      _searchQuery = _searchController.text;
     });
   }
 
-  void _markParticipantCompleted(String participantId) async {
-    final index = _participants.indexWhere((p) => p.id == participantId);
-    if (index == -1) return;
-
-    // Get participant
-    final participant = _participants[index];
-
-    // Record segment time
-    await _recordSegmentTime(participant.id);
-
-    // Move to next segment
-    final updatedParticipant = await _progressionService.moveToNextSegment(
-        participant, _timerService.elapsed);
-
-    if (updatedParticipant != null) {
-      setState(() {
-        // Remove from current list
-        _participants.removeAt(index);
-        _filteredParticipants = List.from(_participants);
-
-        // Show transition message
-        _showTransitionMessage(participant, updatedParticipant);
-      });
-    }
+  void _loadParticipants() {
+    final segmentString = segment.toString().split('.').last;
+    Provider.of<ParticipantProvider>(context, listen: false)
+        .loadParticipantsBySegment(segmentString);
   }
 
-  Future<void> _recordSegmentTime(String participantId) async {
-    // In a real app, you'd save this to your database
+  Future<void> _completeParticipantSegment(String id) async {
+    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
+    final participantProvider =
+        Provider.of<ParticipantProvider>(context, listen: false);
+    final segmentTimeProvider =
+        Provider.of<SegmentTimeProvider>(context, listen: false);
+    final resultProvider = Provider.of<ResultProvider>(context, listen: false);
+
+    // Record current segment time
+    final currentTime = timerProvider.recordCurrentTime();
+
+    // Record segment time in database
     final segmentTime = SegmentTime(
-      participantId: participantId,
+      participantId: id,
       segment: segment,
-      time: _timerService.elapsed,
+      time: currentTime,
       recordedAt: DateTime.now(),
     );
+    await segmentTimeProvider.recordSegmentTime(segmentTime);
 
-    // For now just log it
-    debugPrint('Recorded segment time: ${segmentTime.toJson()}');
+    // Update participant and move to next segment
+    final updatedParticipant =
+        await participantProvider.completeSegment(id, currentTime);
+
+    if (updatedParticipant != null) {
+      // Show transition message
+      _showTransitionMessage(id, updatedParticipant.segment);
+
+      // If all segments are completed, calculate final result
+      if (updatedParticipant.isAllSegmentsCompleted) {
+        await resultProvider.calculateAndUpdateResult(id);
+      }
+    }
   }
 
-  void _showTransitionMessage(
-      Participant oldParticipant, Participant updatedParticipant) {
-    final String nextSegmentName;
+  void _showTransitionMessage(String participantId, String nextSegment) {
+    final participantProvider =
+        Provider.of<ParticipantProvider>(context, listen: false);
+    final participants = participantProvider.participants;
+    final name = participants
+        .firstWhere((p) => p.id == participantId,
+            orElse: () => Participant(
+                id: '',
+                bib: 0,
+                name: 'Participant',
+                segment: '',
+                completed: false))
+        .name;
 
-    if (updatedParticipant.segment == 'swim') {
-      nextSegmentName = 'Swimming';
-    } else if (updatedParticipant.segment == 'cycle') {
-      nextSegmentName = 'Cycling';
-    } else {
-      // All segments completed - show immediate toast
-      ScaffoldMessenger.of(context)
-          .hideCurrentSnackBar(); // Hide any existing snackbar
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${oldParticipant.name} has completed all segments'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(8),
-          duration: const Duration(seconds: 1), // Shorter duration
-          animation: null, // Remove animation for immediate appearance
-        ),
-      );
-      return;
-    }
+    final nextSegmentName = nextSegment == 'swim'
+        ? 'Swimming'
+        : nextSegment == 'cycle'
+            ? 'Cycling'
+            : 'Finished';
 
-    // Show immediate notification
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar(); // Hide any existing snackbar
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${oldParticipant.name} moved to $nextSegmentName'),
-        backgroundColor: Colors.blue,
+        content: Text('$name moved to $nextSegmentName'),
+        backgroundColor:
+            nextSegmentName == 'Finished' ? Colors.green : Colors.blue,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(8),
-        duration: const Duration(milliseconds: 800), // Very short duration
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        animation: null, // Remove animation for immediate appearance
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void navigateToPage(int index) {
-    if ((index == 0 && segment == Segment.run) ||
-        (index == 1 && segment == Segment.swim) ||
-        (index == 2 && segment == Segment.cycle)) {
-      return;
-    }
+  void _navigateToPage(int index) {
+    final currentIndex = NavigationService.getNavigationIndex(segment);
+    if (index == currentIndex) return;
 
-    String route = NavigationService.getRouteForIndex(index);
-    Navigator.pushReplacementNamed(context, route);
+    Navigator.pushReplacementNamed(
+        context, NavigationService.getRouteForIndex(index));
   }
 
   @override
   void dispose() {
-    _timerService.dispose();
     _searchController.dispose();
+    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -199,33 +159,80 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
               ],
             ),
             const SizedBox(height: 24),
+
             // Timer display and controls
-            AnimatedBuilder(
-              animation: _timerService,
-              builder: (context, _) {
+            Consumer<TimerProvider>(
+              builder: (context, timerProvider, _) {
                 return TimerSection(
-                  elapsed: _timerService.elapsed,
-                  isRunning: _timerService.isRunning,
-                  onStartStop: _timerService.toggle,
-                  onReset: _timerService.reset,
+                  elapsed: timerProvider.elapsed,
+                  isRunning: timerProvider.isRunning,
+                  onStartStop: timerProvider.toggle,
+                  onReset: timerProvider.reset,
                 );
               },
             ),
+
             const SizedBox(height: 24),
+
             // Search bar
             SearchBarWidget(controller: _searchController),
+
             const SizedBox(height: 16),
+
             // Participants list
-            ParticipantsSection(
-              participants: _filteredParticipants,
-              onComplete: _markParticipantCompleted,
+            Consumer<ParticipantProvider>(
+              builder: (context, participantProvider, _) {
+                if (participantProvider.isLoading) {
+                  return const Expanded(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (participantProvider.error != null) {
+                  return Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            participantProvider.error!,
+                            style: TextStyle(color: Colors.red[700]),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _loadParticipants,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final filteredParticipants =
+                    participantProvider.getFilteredParticipants(_searchQuery);
+
+                if (filteredParticipants.isEmpty) {
+                  return const Expanded(
+                    child: Center(
+                      child: Text('No participants found'),
+                    ),
+                  );
+                }
+
+                return ParticipantsSection(
+                  participants: filteredParticipants,
+                  onComplete: _completeParticipantSegment,
+                );
+              },
             ),
           ],
         ),
       ),
       bottomNavigationBar: RaceNavigationBar(
         currentIndex: NavigationService.getNavigationIndex(segment),
-        onTap: navigateToPage,
+        onTap: _navigateToPage,
       ),
     );
   }
