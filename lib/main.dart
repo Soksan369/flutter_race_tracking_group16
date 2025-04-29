@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/result_screen.dart';
-import 'screens/track_running_screen.dart';
-import 'screens/track_swimming_screen.dart';
-import 'screens/track_cycling_screen.dart';
+import 'presentation/pages/home/home_screen.dart';
+import 'presentation/pages/race_results/result_screen.dart';
+import 'presentation/pages/race_tracking/track_running_screen.dart';
+import 'presentation/pages/race_tracking/track_swimming_screen.dart';
+import 'presentation/pages/race_tracking/track_cycling_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MainApp());
 }
 
@@ -19,6 +20,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
+        useMaterial3: true,
       ),
       initialRoute: '/',
       routes: {
