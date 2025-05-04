@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_race_tracking_group16/presentation/pages/participants/add_participant.dart';
+import 'package:flutter_race_tracking_group16/presentation/pages/participants/list_participants.dart';
 import 'package:provider/provider.dart';
 import 'presentation/pages/home/home_screen.dart';
 import 'presentation/pages/race_results/result_screen.dart';
@@ -41,6 +43,8 @@ class MainApp extends StatelessWidget {
           '/running': (context) => const TrackRunningScreen(),
           '/swimming': (context) => const TrackSwimmingScreen(),
           '/cycling': (context) => const TrackCyclingScreen(),
+          '/add_participant': (context) => const AddParticipant(),
+          '/list_participants': (context) => const ListParticipants(),
         },
         debugShowCheckedModeBanner: false,
       ),
