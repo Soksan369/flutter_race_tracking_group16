@@ -171,7 +171,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   SizedBox(
                     width: 60,
                     child: Text(
-                      'ID',
+                      'Bib',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
