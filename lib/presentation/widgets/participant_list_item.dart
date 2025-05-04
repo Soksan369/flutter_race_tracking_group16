@@ -71,39 +71,35 @@ class ParticipantListItem extends StatelessWidget {
                 ),
                 // Finish button
                 participant.completed
-                    ? const Chip(
-                        label: Text(
-                          'Finished',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                        ),
-                        backgroundColor: Colors.green,
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                      )
-                    : ElevatedButton(
-                        onPressed: onComplete,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF4CD964), // Exact green from image
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          minimumSize: const Size(80, 36),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 0),
-                        ),
-                        child: const Text(
-                          'Finish',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                ? const Chip(
+                    label: Text(
+                      'Finished',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
                       ),
+                    ),
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                  )
+                : ElevatedButton(
+                    onPressed: onComplete,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CD964), // Exact green from image
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(30), ),
+                      minimumSize: const Size(80, 36),
+                      padding: const EdgeInsets.symmetric( horizontal: 16, vertical: 0),
+                    ),
+                    child: const Text(
+                      'Finish',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ],
@@ -115,14 +111,11 @@ class ParticipantListItem extends StatelessWidget {
   Widget _buildSegmentProgress() {
     return Row(
       children: [
-        _buildSegmentIndicator(
-            'Run', participant.completedSegments['run'] ?? false),
+        _buildSegmentIndicator( 'Run', participant.completedSegments['run'] ?? false),
         const SizedBox(width: 8),
-        _buildSegmentIndicator(
-            'Swim', participant.completedSegments['swim'] ?? false),
+        _buildSegmentIndicator( 'Swim', participant.completedSegments['swim'] ?? false),
         const SizedBox(width: 8),
-        _buildSegmentIndicator(
-            'Cycle', participant.completedSegments['cycle'] ?? false),
+        _buildSegmentIndicator( 'Cycle', participant.completedSegments['cycle'] ?? false),
       ],
     );
   }

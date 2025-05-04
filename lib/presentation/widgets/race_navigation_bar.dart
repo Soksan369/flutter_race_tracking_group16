@@ -8,10 +8,10 @@ class RaceNavigationBar extends StatelessWidget {
   final Function(int) onTap;
 
   const RaceNavigationBar({
-    Key? key,
+    super.key,
     required this.currentIndex,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,22 +23,10 @@ class RaceNavigationBar extends StatelessWidget {
       unselectedItemColor: Colors.grey,
       showUnselectedLabels: true,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_run),
-          label: 'Running',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.pool),
-          label: 'Swimming',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_bike),
-          label: 'Cycling',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.bar_chart),
-          label: 'Results',
-        ),
+        BottomNavigationBarItem( icon: Icon(Icons.directions_run), label: 'Running',),
+        BottomNavigationBarItem( icon: Icon(Icons.pool), label: 'Swimming', ),
+        BottomNavigationBarItem( icon: Icon(Icons.directions_bike), label: 'Cycling', ),
+        BottomNavigationBarItem( icon: Icon(Icons.bar_chart), label: 'Results', ),
       ],
     );
   }

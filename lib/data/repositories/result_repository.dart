@@ -5,8 +5,7 @@ class ResultRepository {
   final FirebaseHttpService _firebaseService;
   final String _currentRaceId = 'race1'; // In a real app, this would be configurable
 
-  ResultRepository({FirebaseHttpService? firebaseService})
-      : _firebaseService = firebaseService ?? FirebaseHttpService();
+  ResultRepository({FirebaseHttpService? firebaseService}) : _firebaseService = firebaseService ?? FirebaseHttpService();
 
   Future<List<Result>> getResults() async {
     try {
@@ -25,7 +24,7 @@ class ResultRepository {
       results.sort((a, b) => a.rank.compareTo(b.rank));
       return results;
     } catch (e) {
-      print('Error fetching results: $e');
+      // print('Error fetching results: $e');
       throw Exception('Failed to load results: $e');
     }
   }
@@ -37,7 +36,7 @@ class ResultRepository {
         result.toJson(),
       );
     } catch (e) {
-      print('Error updating result: $e');
+      // print('Error updating result: $e');
       throw Exception('Failed to update result: $e');
     }
   }

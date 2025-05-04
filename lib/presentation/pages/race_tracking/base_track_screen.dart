@@ -51,15 +51,13 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
   void _loadParticipants() {
     final segmentString = segment.toString().split('.').last;
     Provider.of<ParticipantProvider>(context, listen: false)
-        .loadParticipantsBySegment(segmentString);
+      .loadParticipantsBySegment(segmentString);
   }
 
   Future<void> _completeParticipantSegment(String id) async {
     final timerProvider = Provider.of<TimerProvider>(context, listen: false);
-    final participantProvider =
-        Provider.of<ParticipantProvider>(context, listen: false);
-    final segmentTimeProvider =
-        Provider.of<SegmentTimeProvider>(context, listen: false);
+    final participantProvider = Provider.of<ParticipantProvider>(context, listen: false);
+    final segmentTimeProvider = Provider.of<SegmentTimeProvider>(context, listen: false);
     final resultProvider = Provider.of<ResultProvider>(context, listen: false);
 
     // Record current segment time
@@ -75,8 +73,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     await segmentTimeProvider.recordSegmentTime(segmentTime);
 
     // Update participant and move to next segment
-    final updatedParticipant =
-        await participantProvider.completeSegment(id, currentTime);
+    final updatedParticipant = await participantProvider.completeSegment(id, currentTime);
 
     if (updatedParticipant != null) {
       // Show transition message
@@ -103,18 +100,13 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
                 completed: false))
         .name;
 
-    final nextSegmentName = nextSegment == 'swim'
-        ? 'Swimming'
-        : nextSegment == 'cycle'
-            ? 'Cycling'
-            : 'Finished';
+    final nextSegmentName = nextSegment == 'swim' ? 'Swimming' : nextSegment == 'cycle' ? 'Cycling' : 'Finished';
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('$name moved to $nextSegmentName'),
-        backgroundColor:
-            nextSegmentName == 'Finished' ? Colors.green : Colors.blue,
+        backgroundColor: nextSegmentName == 'Finished' ? Colors.green : Colors.blue,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),
@@ -125,8 +117,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     final currentIndex = NavigationService.getNavigationIndex(segment);
     if (index == currentIndex) return;
 
-    Navigator.pushReplacementNamed(
-        context, NavigationService.getRouteForIndex(index));
+    Navigator.pushReplacementNamed( context, NavigationService.getRouteForIndex(index));
   }
 
   @override

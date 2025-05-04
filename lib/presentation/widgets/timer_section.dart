@@ -8,12 +8,12 @@ class TimerSection extends StatelessWidget {
   final VoidCallback onReset;
 
   const TimerSection({
-    Key? key,
+    super.key,
     required this.elapsed,
     required this.isRunning,
     required this.onStartStop,
     required this.onReset,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

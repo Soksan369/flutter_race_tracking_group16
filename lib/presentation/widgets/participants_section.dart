@@ -7,10 +7,10 @@ class ParticipantsSection extends StatelessWidget {
   final Function(String) onComplete;
 
   const ParticipantsSection({
-    Key? key,
+    super.key,
     required this.participants,
     required this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,10 +18,10 @@ class ParticipantsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
-              children: const [
+              children: [
                 Icon(Icons.people, size: 20),
                 SizedBox(width: 8),
                 Text(

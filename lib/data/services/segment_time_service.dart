@@ -3,11 +3,9 @@ import 'firebase_http_service.dart';
 
 class SegmentTimeService {
   final FirebaseHttpService _firebaseService;
-  final String _currentRaceId =
-      'race1'; // In a real app, this would be configurable
+  final String _currentRaceId = 'race1'; // In a real app, this would be configurable
 
-  SegmentTimeService({FirebaseHttpService? firebaseService})
-      : _firebaseService = firebaseService ?? FirebaseHttpService();
+  SegmentTimeService({FirebaseHttpService? firebaseService}) : _firebaseService = firebaseService ?? FirebaseHttpService();
 
   Future<bool> recordSegmentTime(SegmentTime segmentTime) async {
     try {
@@ -32,8 +30,7 @@ class SegmentTimeService {
   Future<List<SegmentTime>> getSegmentTimesForParticipant(
       String participantId) async {
     try {
-      final data = await _firebaseService
-          .get('segmentTimes/$_currentRaceId/$participantId');
+      final data = await _firebaseService.get('segmentTimes/$_currentRaceId/$participantId');
 
       final List<SegmentTime> times = [];
       if (data != null) {

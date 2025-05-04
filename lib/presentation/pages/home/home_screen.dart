@@ -25,20 +25,15 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 48),
 
               // Race tracking buttons
-              _buildNavigationButton(
-                  context, 'Track Running', Icons.directions_run, '/running'),
+              _buildNavigationButton( context, 'Track Running', Icons.directions_run, '/running'),
               const SizedBox(height: 16),
-              _buildNavigationButton(
-                  context, 'Track Swimming', Icons.pool, '/swimming'),
+              _buildNavigationButton( context, 'Track Swimming', Icons.pool, '/swimming'),
               const SizedBox(height: 16),
-              _buildNavigationButton(
-                  context, 'Track Cycling', Icons.directions_bike, '/cycling'),
+              _buildNavigationButton( context, 'Track Cycling', Icons.directions_bike, '/cycling'),
               const SizedBox(height: 32),
 
               // Results button
-              _buildNavigationButton(
-                  context, 'View Results', Icons.emoji_events, '/result',
-                  isPrimary: true),
+              _buildNavigationButton( context, 'View Results', Icons.emoji_events, '/result', isPrimary: true),
             ],
           ),
         ),
@@ -46,9 +41,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNavigationButton(
-      BuildContext context, String title, IconData icon, String route,
-      {bool isPrimary = false}) {
+  Widget _buildNavigationButton( BuildContext context, String title, IconData icon, String route, {bool isPrimary = false}) {
     return SizedBox(
       width: 250,
       child: ElevatedButton.icon(

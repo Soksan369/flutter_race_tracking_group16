@@ -90,9 +90,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: Text(
                         categories[index],
                         style: TextStyle(
-                          color: selectedCategory == index
-                              ? Colors.black
-                              : Colors.grey,
+                          color: selectedCategory == index ? Colors.black : Colors.grey,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

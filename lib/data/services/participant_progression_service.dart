@@ -6,15 +6,13 @@ import '../repositories/participant_repository.dart';
 class ParticipantProgressionService {
   final ParticipantRepository _participantRepo;
 
-  ParticipantProgressionService({ParticipantRepository? participantRepo})
-      : _participantRepo = participantRepo ?? ParticipantRepository();
+  ParticipantProgressionService({ParticipantRepository? participantRepo}) : _participantRepo = participantRepo ?? ParticipantRepository();
 
   /// Move a participant to the next segment after completing current segment
   Future<Participant?> moveToNextSegment(
       Participant participant, Duration segmentTime) async {
     // Mark current segment as completed
-    final updatedCompletedSegments =
-        Map<String, bool>.from(participant.completedSegments);
+    final updatedCompletedSegments = Map<String, bool>.from(participant.completedSegments);
     updatedCompletedSegments[participant.segment] = true;
 
     // Determine next segment

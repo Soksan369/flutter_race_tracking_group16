@@ -24,8 +24,7 @@ class ResultService {
   Future<void> calculateAndUpdateResult(String participantId) async {
     try {
       // Get all segment times for participant
-      final segmentTimes = await _segmentTimeService
-          .getSegmentTimesForParticipant(participantId);
+      final segmentTimes = await _segmentTimeService .getSegmentTimesForParticipant(participantId);
 
       // Get participant details
       final allParticipants = await _participantRepository.getAllParticipants();
