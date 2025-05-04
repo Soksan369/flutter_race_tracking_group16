@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import '../models/participant.dart';
 import '../repositories/participant_repository.dart';
 
