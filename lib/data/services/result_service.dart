@@ -39,7 +39,7 @@ class ResultService {
 
       // For now, assign rank based on total time
       // In a real app, this would involve more complex logic
-      final int rank = 1; // Placeholder
+      const int rank = 1; // Placeholder
 
       // Create or update result
       final result = Result(
@@ -52,7 +52,7 @@ class ResultService {
 
       await _resultRepository.updateResult(result);
     } catch (e) {
-      print('Error calculating result: $e');
+      // print('Error calculating result: $e');
       throw Exception('Failed to calculate result: $e');
     }
   }

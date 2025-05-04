@@ -1,6 +1,6 @@
-/// Utility functions for formatting data in the app
+// Utility functions for formatting data in the app
 
-/// Formats a Duration object into a string with format "HH:MM:SS:MS"
+// Formats a Duration object into a string with format "HH:MM:SS:MS"
 String formatDuration(Duration d) {
   String twoDigits(int n) => n.toString().padLeft(2, '0');
   final hours = twoDigits(d.inHours);
