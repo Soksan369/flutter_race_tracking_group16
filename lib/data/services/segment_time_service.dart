@@ -24,7 +24,7 @@ class SegmentTimeService {
 
       return true;
     } catch (e) {
-      print('Error recording segment time: $e');
+      // print('Error recording segment time: $e');
       return false;
     }
   }
@@ -54,7 +54,7 @@ class SegmentTimeService {
 
       return times;
     } catch (e) {
-      print('Error fetching segment times: $e');
+      // print('Error fetching segment times: $e');
       return [];
     }
   }

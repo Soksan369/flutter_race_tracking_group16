@@ -3,8 +3,7 @@ import '../services/firebase_http_service.dart';
 
 class ResultRepository {
   final FirebaseHttpService _firebaseService;
-  final String _currentRaceId =
-      'race1'; // In a real app, this would be configurable
+  final String _currentRaceId = 'race1'; // In a real app, this would be configurable
 
   ResultRepository({FirebaseHttpService? firebaseService})
       : _firebaseService = firebaseService ?? FirebaseHttpService();

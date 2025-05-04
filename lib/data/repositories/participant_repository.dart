@@ -3,11 +3,9 @@ import '../services/firebase_http_service.dart';
 
 class ParticipantRepository {
   final FirebaseHttpService _firebaseService;
-  final String _currentRaceId =
-      'race1'; // In a real app, this would be configurable
+  final String _currentRaceId = 'race1'; // In a real app, this would be configurable
 
-  ParticipantRepository({FirebaseHttpService? firebaseService})
-      : _firebaseService = firebaseService ?? FirebaseHttpService();
+  ParticipantRepository({FirebaseHttpService? firebaseService}) : _firebaseService = firebaseService ?? FirebaseHttpService();
 
   // Get all participants for the current race
   Future<List<Participant>> getAllParticipants() async {
@@ -23,7 +21,7 @@ class ParticipantRepository {
 
       return participants;
     } catch (e) {
-      print('Error fetching all participants: $e');
+      // print('Error fetching all participants: $e');
       throw Exception('Failed to load participants: $e');
     }
   }
@@ -36,7 +34,7 @@ class ParticipantRepository {
       final allParticipants = await getAllParticipants();
       return allParticipants.where((p) => p.segment == segment).toList();
     } catch (e) {
-      print('Error fetching participants by segment: $e');
+      // print('Error fetching participants by segment: $e');
       throw Exception('Failed to load participants for segment $segment: $e');
     }
   }
@@ -49,7 +47,7 @@ class ParticipantRepository {
         participant.toJson(),
       );
     } catch (e) {
-      print('Error updating participant: $e');
+      // print('Error updating participant: $e');
       throw Exception('Failed to update participant: $e');
     }
   }
@@ -62,7 +60,7 @@ class ParticipantRepository {
         {'completed': completed},
       );
     } catch (e) {
-      print('Error updating participant status: $e');
+      // print('Error updating participant status: $e');
       throw Exception('Failed to update participant status: $e');
     }
   }

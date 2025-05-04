@@ -4,8 +4,7 @@ class Participant {
   final String name;
   final String segment; // run, swim, cycle
   final bool completed;
-  final Map<String, bool>
-      completedSegments; // Track completion status for each segment
+  final Map<String, bool> completedSegments; // Track completion status for each segment
 
   Participant({
     required this.id,

@@ -8,9 +8,7 @@ class FirebaseHttpService {
   FirebaseHttpService({
     String? baseUrl,
     http.Client? client,
-  })  : _baseUrl = baseUrl ??
-            'https://flutter-fire-base-2ac06-default-rtdb.asia-southeast1.firebasedatabase.app/',
-        _client = client ?? http.Client();
+  })  : _baseUrl = baseUrl ?? 'https://flutter-fire-base-2ac06-default-rtdb.asia-southeast1.firebasedatabase.app/', _client = client ?? http.Client();
 
   Future<dynamic> get(String path) async {
     try {
@@ -30,8 +28,7 @@ class FirebaseHttpService {
     }
   }
 
-  Future<Map<String, dynamic>> post(
-      String path, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> post( String path, Map<String, dynamic> data) async {
     try {
       final response = await _client.post(
         Uri.parse('$_baseUrl$path.json'),
