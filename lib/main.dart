@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_race_tracking_group16/presentation/pages/participants/add_participant.dart';
 import 'package:flutter_race_tracking_group16/presentation/pages/participants/list_participants.dart';
 import 'package:provider/provider.dart';
-import 'presentation/pages/home/home_screen.dart';
+import 'presentation/pages/home/home_screen copy.dart';
 import 'presentation/pages/race_results/result_screen.dart';
 import 'presentation/pages/race_tracking/track_running_screen.dart';
 import 'presentation/pages/race_tracking/track_swimming_screen.dart';
