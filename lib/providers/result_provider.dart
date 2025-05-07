@@ -93,7 +93,8 @@ class ResultProvider with ChangeNotifier {
             final cycleMillis =
                 participantSplits['cycle'] ?? participantSplits['cycling'];
 
-            // Convert to Duration objects if not null
+            // Convert to actual segment durations
+            // Running time is from race start (0) to running completion
             runTime = runMillis != null
                 ? Duration(
                     milliseconds: runMillis is int
@@ -101,19 +102,26 @@ class ResultProvider with ChangeNotifier {
                         : (runMillis as double).toInt())
                 : null;
 
-            swimTime = swimMillis != null
-                ? Duration(
-                    milliseconds: swimMillis is int
-                        ? swimMillis
-                        : (swimMillis as double).toInt())
-                : null;
+            // Swimming duration is swimming timestamp minus running timestamp
+            if (swimMillis != null && runMillis != null) {
+              final swimMs = swimMillis is int
+                  ? swimMillis
+                  : (swimMillis as double).toInt();
+              final runMs =
+                  runMillis is int ? runMillis : (runMillis as double).toInt();
+              swimTime = Duration(milliseconds: swimMs - runMs);
+            }
 
-            cycleTime = cycleMillis != null
-                ? Duration(
-                    milliseconds: cycleMillis is int
-                        ? cycleMillis
-                        : (cycleMillis as double).toInt())
-                : null;
+            // Cycling duration is cycling timestamp minus swimming timestamp
+            if (cycleMillis != null && swimMillis != null) {
+              final cycleMs = cycleMillis is int
+                  ? cycleMillis
+                  : (cycleMillis as double).toInt();
+              final swimMs = swimMillis is int
+                  ? swimMillis
+                  : (swimMillis as double).toInt();
+              cycleTime = Duration(milliseconds: cycleMs - swimMs);
+            }
 
             // Calculate total time if all segments are completed
             if (runTime != null && swimTime != null && cycleTime != null) {
@@ -124,7 +132,7 @@ class ResultProvider with ChangeNotifier {
             }
 
             debugPrint(
-                "Processing splits for $name (#$bib): Run=${runMillis}, Swim=${swimMillis}, Cycle=${cycleMillis}");
+                "Processing splits for $name (#$bib): Run=${formatDuration(runTime)}, Swim=${formatDuration(swimTime)}, Cycle=${formatDuration(cycleTime)}");
           }
 
           results.add(Result(
@@ -211,5 +219,10 @@ class ResultProvider with ChangeNotifier {
     // This will be triggered when all segments are complete
     // For now, just reload results to get the latest data
     await loadResults();
+  }
+
+  String formatDuration(Duration? duration) {
+    if (duration == null) return '-';
+    return '${duration.inMinutes.toString().padLeft(2, '0')}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 }

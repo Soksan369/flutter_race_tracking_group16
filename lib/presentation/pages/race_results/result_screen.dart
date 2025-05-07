@@ -163,7 +163,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   SizedBox(
                     width: 100,
                     child: Text(
-                      'Times',
+                      'Duration',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         fontSize: 16,
