@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../data/models/participant.dart';
 import '../data/repositories/participant_repository.dart';
@@ -8,8 +9,9 @@ class ParticipantProvider with ChangeNotifier {
   final ParticipantProgressionService _progressionService;
 
   List<Participant> _participants = [];
-  bool _isLoading = false;
+  bool _isLoading = true;
   String? _error;
+  Timer? _refreshTimer;
 
   ParticipantProvider({
     ParticipantRepository? repository,
@@ -23,17 +25,36 @@ class ParticipantProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> loadParticipantsBySegment(String segment) async {
+  // Load participants for a specific segment
+  void loadParticipantsBySegment(String segment) {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
+    // Cancel any existing timer
+    _refreshTimer?.cancel();
+
+    // Fetch participants initially
+    _fetchParticipantsBySegment(segment);
+
+    // Set up periodic refresh every 3 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      _fetchParticipantsBySegment(segment);
+    });
+  }
+
+  // Private method to fetch participants for a specific segment
+  Future<void> _fetchParticipantsBySegment(String segment) async {
     try {
-      final data = await _repository.getParticipantsBySegment(segment);
-      _participants = data;
+      // Updated to use the public getAllParticipants method
+      final allParticipants = await _repository.getAllParticipants();
+      // Filter by segment
+      _participants =
+          allParticipants.where((p) => p.segment == segment).toList();
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _error = 'Failed to load participants: $e';
-    } finally {
       _isLoading = false;
       notifyListeners();
     }
@@ -51,10 +72,6 @@ class ParticipantProvider with ChangeNotifier {
       if (updatedParticipant != null) {
         // Update participant in repository
         await _repository.updateParticipant(updatedParticipant);
-
-        // Update local list
-        _participants.removeAt(index);
-        notifyListeners();
       }
 
       return updatedParticipant;
@@ -68,10 +85,17 @@ class ParticipantProvider with ChangeNotifier {
   List<Participant> getFilteredParticipants(String query) {
     if (query.isEmpty) return _participants;
 
+    final lowercaseQuery = query.toLowerCase();
     return _participants
         .where((p) =>
-            p.name.toLowerCase().contains(query.toLowerCase()) ||
-            p.bib.toString().contains(query))
+            p.name.toLowerCase().contains(lowercaseQuery) ||
+            p.bib.toString().contains(lowercaseQuery))
         .toList();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 }

@@ -5,9 +5,9 @@ import '../../../data/models/participant.dart';
 import '../../../data/models/segment_time.dart';
 import '../../../services/navigation_service.dart';
 import '../../../providers/participant_provider.dart';
-import '../../../providers/timer_provider.dart';
 import '../../../providers/segment_time_provider.dart';
 import '../../../providers/result_provider.dart';
+import '../../../providers/race_timer_provider.dart';
 import '../../widgets/timer_section.dart';
 import '../../widgets/search_bar_widget.dart';
 import '../../widgets/participants_section.dart';
@@ -22,24 +22,30 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
   // Search functionality
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
 
-    // Load participants when screen initializes
+    // Load participants when screen initializes - now using streams
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadParticipants();
+      _initializeScreen();
     });
+  }
 
-    // Set up polling for updates
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) {
-        _loadParticipants();
-      }
-    });
+  void _initializeScreen() {
+    // Subscribe to participants for this segment
+    final segmentString = segment.toString().split('.').last;
+    Provider.of<ParticipantProvider>(context, listen: false)
+        .loadParticipantsBySegment(segmentString);
+
+    // Make sure timer is still running when coming to this screen
+    final raceTimerProvider =
+        Provider.of<RaceTimerProvider>(context, listen: false);
+    if (!raceTimerProvider.isRunning) {
+      raceTimerProvider.initialize();
+    }
   }
 
   void _onSearchChanged() {
@@ -48,40 +54,46 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     });
   }
 
-  void _loadParticipants() {
-    final segmentString = segment.toString().split('.').last;
-    Provider.of<ParticipantProvider>(context, listen: false)
-      .loadParticipantsBySegment(segmentString);
-  }
-
   Future<void> _completeParticipantSegment(String id) async {
-    final timerProvider = Provider.of<TimerProvider>(context, listen: false);
-    final participantProvider = Provider.of<ParticipantProvider>(context, listen: false);
-    final segmentTimeProvider = Provider.of<SegmentTimeProvider>(context, listen: false);
+    final raceTimerProvider =
+        Provider.of<RaceTimerProvider>(context, listen: false);
+    final participantProvider =
+        Provider.of<ParticipantProvider>(context, listen: false);
     final resultProvider = Provider.of<ResultProvider>(context, listen: false);
 
-    // Record current segment time
-    final currentTime = timerProvider.recordCurrentTime();
+    // Get the segment string (run, swim, cycle) from the enum
+    final segmentString = segment.toString().split('.').last;
 
-    // Record segment time in database
-    final segmentTime = SegmentTime(
-      participantId: id,
-      segment: segment,
-      time: currentTime,
-      recordedAt: DateTime.now(),
-    );
-    await segmentTimeProvider.recordSegmentTime(segmentTime);
+    // Record split time in Firebase using the repository
+    final success = await raceTimerProvider.recordSplit(id, segmentString);
+
+    if (!success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Failed to record time. Please try again.')),
+        );
+      }
+      return;
+    }
+
+    // Record current segment time for this participant
+    final currentTime = raceTimerProvider.getCurrentTime();
 
     // Update participant and move to next segment
-    final updatedParticipant = await participantProvider.completeSegment(id, currentTime);
+    final updatedParticipant =
+        await participantProvider.completeSegment(id, currentTime);
 
     if (updatedParticipant != null) {
-      // Show transition message
-      _showTransitionMessage(id, updatedParticipant.segment);
-
-      // If all segments are completed, calculate final result
-      if (updatedParticipant.isAllSegmentsCompleted) {
+      // If all segments are completed and we're in cycling screen
+      if (updatedParticipant.isAllSegmentsCompleted &&
+          segment == Segment.cycle) {
+        // Calculate final result without showing any notification
         await resultProvider.calculateAndUpdateResult(id);
+        // Participant is already removed from the list by the stream update
+      } else {
+        // For run and swim segments, or if somehow cycling isn't complete yet
+        _showTransitionMessage(id, updatedParticipant.segment);
       }
     }
   }
@@ -90,40 +102,55 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     final participantProvider =
         Provider.of<ParticipantProvider>(context, listen: false);
     final participants = participantProvider.participants;
-    final name = participants
-        .firstWhere((p) => p.id == participantId,
-            orElse: () => Participant(
-                id: '',
-                bib: 0,
-                name: 'Participant',
-                segment: '',
-                completed: false))
-        .name;
+    final participant = participants.firstWhere((p) => p.id == participantId,
+        orElse: () => Participant(
+            id: '',
+            bib: 0,
+            name: 'Participant',
+            segment: '',
+            completed: false));
 
-    final nextSegmentName = nextSegment == 'swim' ? 'Swimming' : nextSegment == 'cycle' ? 'Cycling' : 'Finished';
+    final name = participant.name;
+    final nextSegmentName = nextSegment == 'swim'
+        ? 'Swimming'
+        : nextSegment == 'cycle'
+            ? 'Cycling'
+            : 'Finished';
 
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$name moved to $nextSegmentName'),
-        backgroundColor: nextSegmentName == 'Finished' ? Colors.green : Colors.blue,
-        behavior: SnackBarBehavior.floating,
+        content: Text(
+            '$name completed ${_getSegmentDisplayName()}. Next: $nextSegmentName'),
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  String _getSegmentDisplayName() {
+    switch (segment) {
+      case Segment.run:
+        return 'Running';
+      case Segment.swim:
+        return 'Swimming';
+      case Segment.cycle:
+        return 'Cycling';
+      default:
+        return 'Segment';
+    }
   }
 
   void _navigateToPage(int index) {
     final currentIndex = NavigationService.getNavigationIndex(segment);
     if (index == currentIndex) return;
 
-    Navigator.pushReplacementNamed( context, NavigationService.getRouteForIndex(index));
+    Navigator.pushReplacementNamed(
+        context, NavigationService.getRouteForIndex(index));
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -151,14 +178,14 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
             ),
             const SizedBox(height: 24),
 
-            // Timer display and controls
-            Consumer<TimerProvider>(
-              builder: (context, timerProvider, _) {
+            // Timer display - using synchronized race timer
+            Consumer<RaceTimerProvider>(
+              builder: (context, raceTimerProvider, _) {
                 return TimerSection(
-                  elapsed: timerProvider.elapsed,
-                  isRunning: timerProvider.isRunning,
-                  onStartStop: timerProvider.toggle,
-                  onReset: timerProvider.reset,
+                  elapsed: raceTimerProvider.elapsed,
+                  isRunning: raceTimerProvider.isRunning,
+                  // Don't allow stopping the timer during the race
+                  mode: TimerMode.viewOnly,
                 );
               },
             ),
@@ -170,7 +197,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
 
             const SizedBox(height: 16),
 
-            // Participants list
+            // Participants list - now using Consumer for automatic updates
             Consumer<ParticipantProvider>(
               builder: (context, participantProvider, _) {
                 if (participantProvider.isLoading) {
@@ -192,7 +219,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: _loadParticipants,
+                            onPressed: _initializeScreen,
                             child: const Text('Retry'),
                           ),
                         ],
@@ -201,8 +228,11 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
                   );
                 }
 
-                final filteredParticipants =
-                    participantProvider.getFilteredParticipants(_searchQuery);
+                final filteredParticipants = participantProvider
+                    .getFilteredParticipants(_searchQuery)
+                    .where((p) =>
+                        segment != Segment.cycle || !p.isAllSegmentsCompleted)
+                    .toList();
 
                 if (filteredParticipants.isEmpty) {
                   return const Expanded(

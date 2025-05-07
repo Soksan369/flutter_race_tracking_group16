@@ -1,58 +1,85 @@
+import 'package:firebase_database/firebase_database.dart';
 import '../models/segment_time.dart';
-import 'firebase_http_service.dart';
 
 class SegmentTimeService {
-  final FirebaseHttpService _firebaseService;
-  final String _currentRaceId = 'race1'; // In a real app, this would be configurable
+  final DatabaseReference _db = FirebaseDatabase.instance.ref();
+  final String _currentRaceId;
 
-  SegmentTimeService({FirebaseHttpService? firebaseService}) : _firebaseService = firebaseService ?? FirebaseHttpService();
+  SegmentTimeService({String raceId = 'race1'}) : _currentRaceId = raceId;
+
+  DatabaseReference get _segmentTimesRef =>
+      _db.child('segmentTimes/$_currentRaceId');
 
   Future<bool> recordSegmentTime(SegmentTime segmentTime) async {
     try {
       final segmentString = segmentTime.segment.toString().split('.').last;
 
       // In Firebase, segment times are stored by participant > segment
-      await _firebaseService.put(
-        'segmentTimes/$_currentRaceId/${segmentTime.participantId}/$segmentString',
-        {
-          'time': segmentTime.time.inSeconds,
-          'recordedAt': segmentTime.recordedAt.toIso8601String(),
-        },
-      );
+      await _segmentTimesRef
+          .child(segmentTime.participantId)
+          .child(segmentString)
+          .set({
+        'time': segmentTime.time.inSeconds,
+        'recordedAt': segmentTime.recordedAt.toIso8601String(),
+      });
 
       return true;
     } catch (e) {
-      // print('Error recording segment time: $e');
       return false;
     }
   }
 
-  Future<List<SegmentTime>> getSegmentTimesForParticipant(
-      String participantId) async {
-    try {
-      final data = await _firebaseService.get('segmentTimes/$_currentRaceId/$participantId');
+  // Stream of segment times for a participant
+  Stream<List<SegmentTime>> segmentTimesStream(String participantId) {
+    return _segmentTimesRef.child(participantId).onValue.map((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.value == null) return <SegmentTime>[];
 
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
       final List<SegmentTime> times = [];
-      if (data != null) {
-        data.forEach((segmentKey, value) {
-          final segment = Segment.values.firstWhere(
-            (s) => s.toString().split('.').last == segmentKey,
-            orElse: () => Segment.run,
-          );
 
-          times.add(SegmentTime(
-            participantId: participantId,
-            segment: segment,
-            time: Duration(seconds: value['time']),
-            recordedAt: DateTime.parse(value['recordedAt']),
-          ));
-        });
-      }
+      data.forEach((segmentKey, value) {
+        value = Map<String, dynamic>.from(value as Map);
+        final segment = Segment.values.firstWhere(
+          (s) => s.toString().split('.').last == segmentKey,
+          orElse: () => Segment.run,
+        );
+
+        times.add(SegmentTime(
+          participantId: participantId,
+          segment: segment,
+          time: Duration(seconds: value['time']),
+          recordedAt: DateTime.parse(value['recordedAt']),
+        ));
+      });
 
       return times;
-    } catch (e) {
-      // print('Error fetching segment times: $e');
-      return [];
-    }
+    });
+  }
+
+  Future<List<SegmentTime>> getSegmentTimesForParticipant(
+      String participantId) async {
+    final snapshot = await _segmentTimesRef.child(participantId).get();
+    if (!snapshot.exists) return [];
+
+    final data = Map<String, dynamic>.from(snapshot.value as Map);
+    final List<SegmentTime> times = [];
+
+    data.forEach((segmentKey, value) {
+      value = Map<String, dynamic>.from(value as Map);
+      final segment = Segment.values.firstWhere(
+        (s) => s.toString().split('.').last == segmentKey,
+        orElse: () => Segment.run,
+      );
+
+      times.add(SegmentTime(
+        participantId: participantId,
+        segment: segment,
+        time: Duration(seconds: value['time']),
+        recordedAt: DateTime.parse(value['recordedAt']),
+      ));
+    });
+
+    return times;
   }
 }
