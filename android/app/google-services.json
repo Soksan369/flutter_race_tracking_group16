@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "154669926078",
+    "firebase_url": "https://flutter-fire-base-2ac06-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "flutter-fire-base-2ac06",
+    "storage_bucket": "flutter-fire-base-2ac06.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:154669926078:android:3eb84e3403ef10f4cf40ef",
+        "android_client_info": {
+          "package_name": "com.example.flutter_race_tracking_group16"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6n195kSucG1QQjc6ut8rcQUfLsJ61kVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

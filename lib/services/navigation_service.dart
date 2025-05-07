@@ -30,4 +30,18 @@ class NavigationService {
         return '/';
     }
   }
+
+  // New method to get route based on segment string
+  static String? getRouteForSegment(String segment) {
+    switch (segment) {
+      case 'run':
+        return '/running';
+      case 'swim':
+        return '/swimming';
+      case 'cycle':
+        return '/cycling';
+      default:
+        return null;
+    }
+  }
 }

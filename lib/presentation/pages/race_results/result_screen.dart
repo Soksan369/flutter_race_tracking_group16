@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/result_provider.dart';
 import '../../../utils/formatters.dart';
+import '../../../data/models/result.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -90,7 +91,9 @@ class _ResultScreenState extends State<ResultScreen> {
                       child: Text(
                         categories[index],
                         style: TextStyle(
-                          color: selectedCategory == index ? Colors.black : Colors.grey,
+                          color: selectedCategory == index
+                              ? Colors.black
+                              : Colors.grey,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -222,8 +225,15 @@ class _ResultScreenState extends State<ResultScreen> {
                   );
 
                   if (filteredResults.isEmpty) {
-                    return const Center(
-                      child: Text('No results found'),
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          'No results found for "${categories[selectedCategory]}" category',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
                     );
                   }
 
@@ -234,55 +244,8 @@ class _ResultScreenState extends State<ResultScreen> {
                         const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final result = filteredResults[index];
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 12,
-                        ),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: 60,
-                              child: Text(
-                                result.rank.toString(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                result.name,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 100,
-                              child: Text(
-                                formatDuration(result.totalTime),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: Text(
-                                result.bib.toString(),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
+                      return _buildResultItem(
+                          result, categories[selectedCategory]);
                     },
                   );
                 },
@@ -290,6 +253,86 @@ class _ResultScreenState extends State<ResultScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildResultItem(Result r, String category) {
+    // Debug print to check result data
+    debugPrint(
+        'Building result for: ${r.name}, BIB: ${r.bib}, Rank: ${r.rank}');
+
+    String timeText;
+    switch (category) {
+      case 'Running':
+        timeText = r.runTime != null ? formatDuration(r.runTime!) : '-';
+        break;
+      case 'Swimming':
+        timeText = r.swimTime != null ? formatDuration(r.swimTime!) : '-';
+        break;
+      case 'Cycling':
+        timeText = r.cycleTime != null ? formatDuration(r.cycleTime!) : '-';
+        break;
+      default:
+        timeText = r.totalTime != null ? formatDuration(r.totalTime!) : '-';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: Row(
+        children: [
+          // Rank column
+          SizedBox(
+            width: 60,
+            child: Text(
+              r.rank != null ? r.rank.toString() : '-',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+
+          // Name column
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  r.name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Time column
+          SizedBox(
+            width: 100,
+            child: Text(
+              timeText,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+
+          // Bib column (for all categories)
+          SizedBox(
+            width: 60,
+            child: Text(
+              r.bib.toString(),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
