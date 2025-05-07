@@ -4,7 +4,8 @@ class Participant {
   final String name;
   final String segment; // run, swim, cycle
   final bool completed;
-  final Map<String, bool> completedSegments; // Track completion status for each segment
+  final Map<String, bool>
+      completedSegments; // Track completion status for each segment
 
   Participant({
     required this.id,
@@ -21,11 +22,12 @@ class Participant {
             };
 
   factory Participant.fromJson(Map<String, dynamic> json) => Participant(
-        id: json['id'],
-        bib: json['bib'],
-        name: json['name'],
-        segment: json['segment'],
-        completed: json['completed'],
+        id: json['id'] ?? '', // Add null safety
+        bib: (json['bib'] ?? 0) as int, // Add null safety and ensure int type
+        name: json['name'] ?? 'Unknown', // Add null safety
+        segment:
+            json['segment'] ?? 'run', // Add null safety with default segment
+        completed: json['completed'] ?? false, // Add null safety
         completedSegments: json['completedSegments'] != null
             ? Map<String, bool>.from(json['completedSegments'])
             : null,

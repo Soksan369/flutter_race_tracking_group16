@@ -12,6 +12,7 @@ class RaceTimerProvider with ChangeNotifier {
   StreamSubscription<DateTime?>? _subscription;
 
   RaceTimerProvider({required this.repository}) {
+    // Initialize subscription on creation
     _initializeSubscription();
   }
 
@@ -19,11 +20,15 @@ class RaceTimerProvider with ChangeNotifier {
     // Cancel any existing subscription
     _subscription?.cancel();
 
-    // Listen for remote startTime
+    // Listen for remote startTime - this ensures all devices stay in sync
     _subscription = repository.startTimeStream().listen((serverTime) {
-      if (serverTime != null && _startTime == null) {
+      if (serverTime != null) {
         _startTime = serverTime;
-        _startTimer();
+
+        // Only start the timer if it's not already running
+        if (!_isRunning) {
+          _startTimer();
+        }
       }
     });
   }
@@ -33,12 +38,8 @@ class RaceTimerProvider with ChangeNotifier {
 
   // Initialize - check if race is already started
   Future<void> initialize() async {
-    try {
-      // Any additional initialization can happen here
-      debugPrint('Timer initialized, waiting for start event');
-    } catch (e) {
-      debugPrint('Error initializing timer: $e');
-    }
+    // No additional initialization needed - subscription is set up in constructor
+    debugPrint('Timer initialized, waiting for start event');
   }
 
   // Start race timer - called from home screen
@@ -47,9 +48,9 @@ class RaceTimerProvider with ChangeNotifier {
 
     _startTime = DateTime.now();
     try {
-      // Save start time to Firebase
+      // Save start time to Firebase - all devices will get this update
       await repository.setStartTime(_startTime!);
-      _startTimer();
+      // Local timer will be started by the subscription
     } catch (e) {
       debugPrint('Error starting race: $e');
     }
@@ -79,8 +80,8 @@ class RaceTimerProvider with ChangeNotifier {
     // Initial calculation
     _updateElapsed();
 
-    // Regular updates
-    _timer = Timer.periodic(const Duration(milliseconds: 200), (_) {
+    // Regular updates - more frequent for smoother UI
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _updateElapsed();
     });
 

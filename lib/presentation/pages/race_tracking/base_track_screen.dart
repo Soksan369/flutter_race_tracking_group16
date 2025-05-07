@@ -22,43 +22,36 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
   // Search functionality
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
 
-    // Load participants when screen initializes
+    // Load participants when screen initializes - now using streams
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadParticipants();
-
-      // Make sure timer is still running when coming to this screen
-      final raceTimerProvider =
-          Provider.of<RaceTimerProvider>(context, listen: false);
-      if (!raceTimerProvider.isRunning) {
-        raceTimerProvider.initialize();
-      }
+      _initializeScreen();
     });
+  }
 
-    // Set up polling for updates
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) {
-        _loadParticipants();
-      }
-    });
+  void _initializeScreen() {
+    // Subscribe to participants for this segment
+    final segmentString = segment.toString().split('.').last;
+    Provider.of<ParticipantProvider>(context, listen: false)
+        .loadParticipantsBySegment(segmentString);
+
+    // Make sure timer is still running when coming to this screen
+    final raceTimerProvider =
+        Provider.of<RaceTimerProvider>(context, listen: false);
+    if (!raceTimerProvider.isRunning) {
+      raceTimerProvider.initialize();
+    }
   }
 
   void _onSearchChanged() {
     setState(() {
       _searchQuery = _searchController.text;
     });
-  }
-
-  void _loadParticipants() {
-    final segmentString = segment.toString().split('.').last;
-    Provider.of<ParticipantProvider>(context, listen: false)
-        .loadParticipantsBySegment(segmentString);
   }
 
   Future<void> _completeParticipantSegment(String id) async {
@@ -71,7 +64,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
     // Get the segment string (run, swim, cycle) from the enum
     final segmentString = segment.toString().split('.').last;
 
-    // Record split time in Firebase using the new repository
+    // Record split time in Firebase using the repository
     final success = await raceTimerProvider.recordSplit(id, segmentString);
 
     if (!success) {
@@ -97,7 +90,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
           segment == Segment.cycle) {
         // Calculate final result without showing any notification
         await resultProvider.calculateAndUpdateResult(id);
-        // Participant is already removed from the list by the completeSegment method
+        // Participant is already removed from the list by the stream update
       } else {
         // For run and swim segments, or if somehow cycling isn't complete yet
         _showTransitionMessage(id, updatedParticipant.segment);
@@ -158,7 +151,6 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
   @override
   void dispose() {
     _searchController.dispose();
-    _refreshTimer?.cancel();
     super.dispose();
   }
 
@@ -205,7 +197,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
 
             const SizedBox(height: 16),
 
-            // Participants list
+            // Participants list - now using Consumer for automatic updates
             Consumer<ParticipantProvider>(
               builder: (context, participantProvider, _) {
                 if (participantProvider.isLoading) {
@@ -227,7 +219,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton(
-                            onPressed: _loadParticipants,
+                            onPressed: _initializeScreen,
                             child: const Text('Retry'),
                           ),
                         ],

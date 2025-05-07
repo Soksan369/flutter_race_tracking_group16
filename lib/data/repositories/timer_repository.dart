@@ -2,14 +2,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
 
 class TimerRepository {
-  final FirebaseDatabase _db;
+  final DatabaseReference _raceRef;
   final String raceId;
 
-  TimerRepository(this.raceId) : _db = FirebaseDatabase.instance;
+  TimerRepository(this.raceId)
+      : _raceRef = FirebaseDatabase.instance.ref().child('races/$raceId');
 
-  DatabaseReference get _raceRef => _db.ref().child('races/$raceId');
-  DatabaseReference get _participantsRef => _raceRef.child('participants');
-  DatabaseReference get _splitsRef => _raceRef.child('splits');
   DatabaseReference get _startTimeRef => _raceRef.child('startTime');
 
   Future<void> setStartTime(DateTime t) {
@@ -30,33 +28,22 @@ class TimerRepository {
     });
   }
 
-  Future<void> recordSplit({
-    required String participantId,
-    required String segment,
-    required int elapsedMs,
-  }) {
-    return _splitsRef.child(participantId).child(segment).set(elapsedMs);
-  }
-
-  Future<Map<String, dynamic>> fetchAllParticipants() async {
-    final snapshot = await _participantsRef.get();
-    if (!snapshot.exists || snapshot.value == null) return {};
-    return Map<String, dynamic>.from(snapshot.value as Map);
-  }
-
-  Future<Map<String, Map<String, dynamic>>> fetchAllSplits() async {
-    final snapshot = await _splitsRef.get();
-    if (!snapshot.exists || snapshot.value == null) return {};
-
-    final data = snapshot.value as Map;
-    final result = <String, Map<String, dynamic>>{};
-
-    data.forEach((key, value) {
-      if (value is Map) {
-        result[key.toString()] = Map<String, dynamic>.from(value);
-      }
+  Future<void> recordSplit(
+      {required String participantId,
+      required String segment,
+      required int elapsedMs}) {
+    return _raceRef.child('splits/$participantId/$segment').set({
+      'time': elapsedMs,
+      'recordedAt': DateTime.now().toIso8601String(),
     });
+  }
 
-    return result;
+  // Stream of all splits for tracking race progress in real-time
+  Stream<Map<String, dynamic>> splitsStream() {
+    return _raceRef.child('splits').onValue.map((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.value == null) return <String, dynamic>{};
+      return Map<String, dynamic>.from(snapshot.value as Map);
+    });
   }
 }
