@@ -12,24 +12,9 @@ String formatDuration(Duration duration) {
   final String hoursStr = hours.toString().padLeft(2, '0');
   final String minutesStr = minutes.toString().padLeft(2, '0');
   final String secondsStr = seconds.toString().padLeft(2, '0');
-  // Only show hundredths of a second (2 decimal places)
+  // Show only two milliseconds digits for smoother display
   final String millisecondsStr =
       (milliseconds ~/ 10).toString().padLeft(2, '0');
 
-  return '$hoursStr:$minutesStr:$secondsStr.$millisecondsStr';
-}
-
-/// Format a duration to a readable string in the format HH:MM:SS (no milliseconds)
-String formatDurationHMS(Duration duration) {
-  // Correctly handle large durations by calculating hours properly
-  final int hours = duration.inHours;
-  final int minutes = duration.inMinutes.remainder(60);
-  final int seconds = duration.inSeconds.remainder(60);
-
-  // Format with leading zeros to ensure consistent display
-  final String hoursStr = hours.toString().padLeft(2, '0');
-  final String minutesStr = minutes.toString().padLeft(2, '0');
-  final String secondsStr = seconds.toString().padLeft(2, '0');
-
-  return '$hoursStr:$minutesStr:$secondsStr';
+  return '$hoursStr:$minutesStr:$secondsStr:$millisecondsStr';
 }

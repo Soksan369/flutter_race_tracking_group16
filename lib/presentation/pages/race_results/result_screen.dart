@@ -275,7 +275,7 @@ class _ResultScreenState extends State<ResultScreen> {
     }
 
     timeText =
-        durationToFormat != null ? formatDurationHMS(durationToFormat) : '-';
+        durationToFormat != null ? formatDuration(durationToFormat) : '-';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

@@ -81,7 +81,7 @@ class RaceTimerProvider with ChangeNotifier {
     _updateElapsed();
 
     // Regular updates - more frequent for smoother UI
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (_) {
       _updateElapsed();
     });
 
