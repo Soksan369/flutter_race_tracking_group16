@@ -11,6 +11,8 @@ class NavigationService {
         return 1;
       case Segment.cycle:
         return 2;
+      case Segment.result:
+        return 3; // ✅ MUST be here
       default:
         return 0;
     }
@@ -44,4 +46,6 @@ class NavigationService {
         return null;
     }
   }
+
+  static getSegmentByIndex(int index) {}
 }

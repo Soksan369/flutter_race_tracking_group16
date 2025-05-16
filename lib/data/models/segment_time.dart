@@ -1,4 +1,4 @@
-enum Segment { run, swim, cycle }
+enum Segment { run, swim, cycle, result }
 
 class SegmentTime {
   final String participantId;

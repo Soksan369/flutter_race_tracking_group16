@@ -46,6 +46,9 @@ class ResultService {
             cycleTime = segmentTime.time;
             totalTime += segmentTime.time;
             break;
+          default:
+            // Segment.result or any unexpected value — safely ignored
+            break;
         }
       }
 
