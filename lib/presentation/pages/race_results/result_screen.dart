@@ -258,24 +258,24 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _buildResultItem(Result r, String category) {
-    // Debug print to check result data
-    debugPrint(
-        'Building result for: ${r.name}, BIB: ${r.bib}, Rank: ${r.rank}');
-
     String timeText;
+    Duration? durationToFormat;
     switch (category) {
       case 'Running':
-        timeText = r.runTime != null ? formatDuration(r.runTime!) : '-';
+        durationToFormat = r.runTime;
         break;
       case 'Swimming':
-        timeText = r.swimTime != null ? formatDuration(r.swimTime!) : '-';
+        durationToFormat = r.swimTime;
         break;
       case 'Cycling':
-        timeText = r.cycleTime != null ? formatDuration(r.cycleTime!) : '-';
+        durationToFormat = r.cycleTime;
         break;
       default:
-        timeText = r.totalTime != null ? formatDuration(r.totalTime!) : '-';
+        durationToFormat = r.totalTime;
     }
+
+    timeText =
+        durationToFormat != null ? formatDurationHMS(durationToFormat) : '-';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
