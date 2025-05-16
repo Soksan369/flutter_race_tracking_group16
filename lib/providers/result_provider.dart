@@ -11,7 +11,10 @@ class ResultProvider with ChangeNotifier {
   List<Result> _results = [];
   bool _isLoading = false;
   String? _error;
-  Timer? _refreshTimer;
+
+  // Replace timer with subscription
+  StreamSubscription<DatabaseEvent>? _splitsSubscription;
+  StreamSubscription<DatabaseEvent>? _participantsSubscription;
 
   ResultProvider({String raceId = 'race1'}) : _raceId = raceId;
 
@@ -24,16 +27,39 @@ class ResultProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    // Cancel any existing timer
-    _refreshTimer?.cancel();
+    // Cancel any existing subscriptions
+    _splitsSubscription?.cancel();
+    _participantsSubscription?.cancel();
 
-    // Fetch results initially
-    _fetchResults();
+    // Set up real-time streams
+    _setupStreams();
+  }
 
-    // Set up periodic refresh
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+  void _setupStreams() {
+    final splitsRef = _db.child('races/$_raceId/splits');
+    final participantsRef1 = _db.child('races/$_raceId/participants');
+    final participantsRef2 = _db.child('participants/$_raceId');
+
+    // Listen for changes to splits data
+    _splitsSubscription = splitsRef.onValue.listen((event) {
       _fetchResults();
+    }, onError: (error) {
+      _error = 'Error loading splits data: $error';
+      _isLoading = false;
+      notifyListeners();
     });
+
+    // Listen for changes to participants data
+    _participantsSubscription = participantsRef1.onValue.listen((event) {
+      _fetchResults();
+    }, onError: (error) {
+      _error = 'Error loading participants data: $error';
+      _isLoading = false;
+      notifyListeners();
+    });
+
+    // Initial fetch
+    _fetchResults();
   }
 
   Future<void> _fetchResults() async {
@@ -140,34 +166,18 @@ class ResultProvider with ChangeNotifier {
             swimTime = _extractDuration(participantSplits, 'swim');
             cycleTime = _extractDuration(participantSplits, 'cycle');
           } else {
-            // Handle the numeric split times
-            final runMillis =
-                participantSplits['run'] ?? participantSplits['running'];
-            final swimMillis =
-                participantSplits['swim'] ?? participantSplits['swimming'];
-            final cycleMillis =
-                participantSplits['cycle'] ?? participantSplits['cycling'];
+            // Handle the numeric split times - convert milliseconds to proper Duration
+            final runMillis = _getSplitValue(participantSplits, 'run');
+            final swimMillis = _getSplitValue(participantSplits, 'swim');
+            final cycleMillis = _getSplitValue(participantSplits, 'cycle');
 
             // Convert to durations
-            runTime = runMillis != null
-                ? Duration(
-                    milliseconds: runMillis is int
-                        ? runMillis
-                        : (runMillis as num).toInt())
-                : null;
-
-            swimTime = swimMillis != null
-                ? Duration(
-                    milliseconds: swimMillis is int
-                        ? swimMillis
-                        : (swimMillis as num).toInt())
-                : null;
-
+            runTime =
+                runMillis != null ? Duration(milliseconds: runMillis) : null;
+            swimTime =
+                swimMillis != null ? Duration(milliseconds: swimMillis) : null;
             cycleTime = cycleMillis != null
-                ? Duration(
-                    milliseconds: cycleMillis is int
-                        ? cycleMillis
-                        : (cycleMillis as num).toInt())
+                ? Duration(milliseconds: cycleMillis)
                 : null;
           }
 
@@ -196,6 +206,13 @@ class ResultProvider with ChangeNotifier {
     });
   }
 
+  // Helper method to safely get split values from various formats
+  int? _getSplitValue(dynamic splitData, String segment) {
+    final value = splitData[segment] ?? splitData['${segment}ing'];
+    if (value == null) return null;
+    return value is int ? value : (value as num).toInt();
+  }
+
   Duration? _extractDuration(Map<dynamic, dynamic> splitData, String segment) {
     final segmentData = splitData[segment];
     if (segmentData == null) return null;
@@ -203,9 +220,18 @@ class ResultProvider with ChangeNotifier {
     if (segmentData is Map) {
       final time = segmentData['time'];
       if (time != null) {
+        // Make sure we handle seconds properly
         return Duration(seconds: time is int ? time : (time as num).toInt());
       }
+
+      // Check for millisecond-based time
+      final timeMs = segmentData['timeMs'];
+      if (timeMs != null) {
+        return Duration(
+            milliseconds: timeMs is int ? timeMs : (timeMs as num).toInt());
+      }
     } else if (segmentData is num) {
+      // Assume milliseconds for direct numeric values
       return Duration(milliseconds: segmentData.toInt());
     }
 
@@ -259,7 +285,8 @@ class ResultProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _splitsSubscription?.cancel();
+    _participantsSubscription?.cancel();
     super.dispose();
   }
 }
