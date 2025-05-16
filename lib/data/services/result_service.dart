@@ -1,4 +1,4 @@
-// ignore_for_file: unused_import
+// ignore_for_file: unused_import, unused_field, avoid_print
 
 import '../models/result.dart';
 import '../models/segment_time.dart';
