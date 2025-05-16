@@ -5,7 +5,6 @@ import '../../../data/models/participant.dart';
 import '../../../data/models/segment_time.dart';
 import '../../../services/navigation_service.dart';
 import '../../../providers/participant_provider.dart';
-import '../../../providers/segment_time_provider.dart';
 import '../../../providers/result_provider.dart';
 import '../../../providers/race_timer_provider.dart';
 import '../../widgets/timer_section.dart';
@@ -135,6 +134,7 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
         return 'Swimming';
       case Segment.cycle:
         return 'Cycling';
+      // ignore: unreachable_switch_default
       default:
         return 'Segment';
     }

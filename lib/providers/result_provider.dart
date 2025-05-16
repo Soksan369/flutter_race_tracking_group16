@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../data/models/result.dart';
-import '../utils/formatters.dart';
 
 class ResultProvider with ChangeNotifier {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();

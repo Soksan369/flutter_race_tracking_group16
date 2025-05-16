@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Create repositories with fixed raceId
-    final String raceId = 'race1';
+    const String raceId = 'race1';
     final timerRepository = TimerRepository(raceId);
     final participantRepository = ParticipantRepository(raceId: raceId);
 
