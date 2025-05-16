@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import '../../data/models/participant.dart';
 
