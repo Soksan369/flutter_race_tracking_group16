@@ -2,10 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/result.dart';
-import '../../../data/models/segment_time.dart'; // ✅ Needed for Segment.result
+import '../../../data/models/segment_time.dart'; // ✅ Needed for Segment.resul
 import '../../../providers/result_provider.dart';
-
-import '../../../utils/formatters.dart'; // Import the formatters utility
+import '../../../utils/formatters.dart'; 
 import '../../../data/models/result.dart';
 import '../../widgets/race_navigation_bar.dart';
 import '../../../services/navigation_service.dart';
