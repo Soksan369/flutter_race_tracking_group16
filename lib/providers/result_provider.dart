@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../data/models/result.dart';
+import '../utils/time_utils.dart';
 
 class ResultProvider with ChangeNotifier {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
@@ -37,7 +38,6 @@ class ResultProvider with ChangeNotifier {
   void _setupStreams() {
     final splitsRef = _db.child('races/$_raceId/splits');
     final participantsRef1 = _db.child('races/$_raceId/participants');
-    final participantsRef2 = _db.child('participants/$_raceId');
 
     // Listen for changes to splits data
     _splitsSubscription = splitsRef.onValue.listen((event) {
@@ -212,25 +212,27 @@ class ResultProvider with ChangeNotifier {
     return value is int ? value : (value as num).toInt();
   }
 
+  // Update the _extractDuration method to ensure consistent handling of time values
   Duration? _extractDuration(Map<dynamic, dynamic> splitData, String segment) {
     final segmentData = splitData[segment];
     if (segmentData == null) return null;
 
     if (segmentData is Map) {
-      final time = segmentData['time'];
-      if (time != null) {
-        // Make sure we handle seconds properly
-        return Duration(seconds: time is int ? time : (time as num).toInt());
+      // First check for segmentDuration - this is the actual segment time in milliseconds
+      final segmentDuration = segmentData['segmentDuration'];
+      if (segmentDuration != null) {
+        // Always interpret segmentDuration as milliseconds
+        return Duration(milliseconds: (segmentDuration as num).toInt());
       }
 
-      // Check for millisecond-based time
-      final timeMs = segmentData['timeMs'];
-      if (timeMs != null) {
-        return Duration(
-            milliseconds: timeMs is int ? timeMs : (timeMs as num).toInt());
+      // Fallback to time if segmentDuration is not available
+      final time = segmentData['time'];
+      if (time != null) {
+        // Always interpret time as milliseconds
+        return Duration(milliseconds: (time as num).toInt());
       }
     } else if (segmentData is num) {
-      // Assume milliseconds for direct numeric values
+      // Direct numeric values - always interpret as milliseconds for consistency
       return Duration(milliseconds: segmentData.toInt());
     }
 
@@ -243,18 +245,19 @@ class ResultProvider with ChangeNotifier {
       return [];
     }
 
-    // First filter by category
+    // Create a copy of results to avoid modifying the original list
     List<Result> categoryFiltered;
     if (category == 'All') {
-      categoryFiltered = _results;
+      categoryFiltered = List.from(_results);
     } else if (category == 'Running') {
+      // Filter visually without modifying the underlying data
       categoryFiltered = _results.where((r) => r.runTime != null).toList();
     } else if (category == 'Swimming') {
       categoryFiltered = _results.where((r) => r.swimTime != null).toList();
     } else if (category == 'Cycling') {
       categoryFiltered = _results.where((r) => r.cycleTime != null).toList();
     } else {
-      categoryFiltered = _results;
+      categoryFiltered = List.from(_results);
     }
 
     // Then filter by search query if not empty

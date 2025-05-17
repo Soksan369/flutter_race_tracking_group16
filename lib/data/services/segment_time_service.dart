@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import '../models/segment_time.dart';
+import '../../utils/time_utils.dart';
 
 class SegmentTimeService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref();
@@ -19,7 +20,8 @@ class SegmentTimeService {
           .child(segmentTime.participantId)
           .child(segmentString)
           .set({
-        'time': segmentTime.time.inSeconds,
+        'time': TimeUtils.toMilliseconds(
+            segmentTime.time), // Store in milliseconds consistently
         'recordedAt': segmentTime.recordedAt.toIso8601String(),
       });
 
@@ -48,7 +50,8 @@ class SegmentTimeService {
         times.add(SegmentTime(
           participantId: participantId,
           segment: segment,
-          time: Duration(seconds: value['time']),
+          time: TimeUtils.standardizeDuration(
+              value['time']), // Use standardizeDuration
           recordedAt: DateTime.parse(value['recordedAt']),
         ));
       });
@@ -75,7 +78,8 @@ class SegmentTimeService {
       times.add(SegmentTime(
         participantId: participantId,
         segment: segment,
-        time: Duration(seconds: value['time']),
+        time: TimeUtils.standardizeDuration(
+            value['time']), // Use standardizeDuration
         recordedAt: DateTime.parse(value['recordedAt']),
       ));
     });

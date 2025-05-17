@@ -19,7 +19,7 @@ class SegmentTime {
         participantId: json['participantId'],
         segment: Segment.values
             .firstWhere((e) => e.toString().split('.').last == json['segment']),
-        time: Duration(seconds: json['time']),
+        time: Duration(milliseconds: json['time']), // <-- use milliseconds
         recordedAt: DateTime.parse(json['recordedAt']),
       );
     } catch (e) {
@@ -30,7 +30,7 @@ class SegmentTime {
   Map<String, dynamic> toJson() => {
         'participantId': participantId,
         'segment': segment.toString().split('.').last,
-        'time': time.inSeconds,
+        'time': time.inMilliseconds, // <-- store as milliseconds
         'recordedAt': recordedAt.toIso8601String(),
       };
 

@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/result_provider.dart';
-import '../../../utils/formatters.dart';
+import '../../../utils/formatters.dart'; // Import the formatters utility
 import '../../../data/models/result.dart';
+import '../../widgets/race_navigation_bar.dart';
+import '../../../services/navigation_service.dart';
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -17,6 +19,7 @@ class _ResultScreenState extends State<ResultScreen> {
   final List<String> categories = ['All', 'Running', 'Swimming', 'Cycling'];
   TextEditingController searchController = TextEditingController();
   Timer? _refreshTimer;
+  int _selectedIndex = 4; // Results tab index (now last)
 
   @override
   void initState() {
@@ -43,6 +46,13 @@ class _ResultScreenState extends State<ResultScreen> {
     searchController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  void _onNavBarTap(int index) {
+    final route = NavigationService.getRouteForIndex(index);
+    if (route != null && ModalRoute.of(context)?.settings.name != route) {
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+    }
   }
 
   @override
@@ -219,6 +229,7 @@ class _ResultScreenState extends State<ResultScreen> {
                     );
                   }
 
+                  // Only filter the displayed results, don't modify participant data
                   final filteredResults = resultProvider.getFilteredResults(
                     searchController.text,
                     categories[selectedCategory],
@@ -254,12 +265,17 @@ class _ResultScreenState extends State<ResultScreen> {
           ],
         ),
       ),
+      bottomNavigationBar: RaceNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavBarTap,
+      ),
     );
   }
 
   Widget _buildResultItem(Result r, String category) {
-    String timeText;
+    String timeText = '-';
     Duration? durationToFormat;
+
     switch (category) {
       case 'Running':
         durationToFormat = r.runTime;
@@ -274,8 +290,9 @@ class _ResultScreenState extends State<ResultScreen> {
         durationToFormat = r.totalTime;
     }
 
-    timeText =
-        durationToFormat != null ? formatDuration(durationToFormat) : '-';
+    if (durationToFormat != null) {
+      timeText = formatRaceTime(durationToFormat);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

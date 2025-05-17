@@ -12,8 +12,9 @@ class TimeUtils {
     }
 
     if (value is int) {
-      // Assume milliseconds for integer values
-      return Duration(milliseconds: value);
+      // Be more definitive about time interpretation based on Firebase format
+      // In Firebase JSON, segmentDuration is always in seconds
+      return Duration(seconds: value);
     }
 
     if (value is Map) {
@@ -26,8 +27,13 @@ class TimeUtils {
         return Duration(milliseconds: (value['milliseconds'] as num).toInt());
       }
 
+      if (value.containsKey('segmentDuration')) {
+        // segmentDuration is stored as seconds in the database
+        return Duration(seconds: (value['segmentDuration'] as num).toInt());
+      }
+
       if (value.containsKey('time')) {
-        // Assume seconds for 'time' field
+        // 'time' field in Firebase is cumulative time in seconds
         return Duration(seconds: (value['time'] as num).toInt());
       }
 
@@ -65,5 +71,15 @@ class TimeUtils {
     // Default case - return zero duration if can't parse
     debugPrint('Warning: Could not parse duration from value: $value');
     return Duration.zero;
+  }
+
+  /// Converts duration to milliseconds for database storage
+  static int toMilliseconds(Duration duration) {
+    return duration.inMilliseconds;
+  }
+
+  /// Converts duration to seconds for database storage
+  static int toSeconds(Duration duration) {
+    return duration.inSeconds;
   }
 }
