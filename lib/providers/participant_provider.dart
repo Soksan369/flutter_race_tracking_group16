@@ -82,8 +82,10 @@ class ParticipantProvider with ChangeNotifier {
     }
   }
 
+  // Make sure this method only filters for display and doesn't modify participant data
   List<Participant> getFilteredParticipants(String query) {
-    if (query.isEmpty) return _participants;
+    if (query.isEmpty)
+      return List.from(_participants); // Return a copy, not the original
 
     final lowercaseQuery = query.toLowerCase();
     return _participants

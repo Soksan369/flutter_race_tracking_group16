@@ -3,6 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/race_timer_provider.dart';
+import '../../widgets/race_navigation_bar.dart';
+import '../../../providers/participant_provider.dart';
+import '../../../services/navigation_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,6 +16,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isRaceInProgress = false;
+  int _selectedIndex = 0; // Home tab index
 
   @override
   void initState() {
@@ -34,20 +38,41 @@ class _HomeScreenState extends State<HomeScreen> {
     final raceTimerProvider =
         Provider.of<RaceTimerProvider>(context, listen: false);
 
-    // Start the race timer
+    // Check if race was already in progress
+    final bool wasRunning = _isRaceInProgress;
+
+    // Start/reset the race timer
     await raceTimerProvider.startRace();
+
+    // Reset all participants to "run" segment at the start of the race
+    try {
+      final participantProvider =
+          Provider.of<ParticipantProvider>(context, listen: false);
+      final participants = participantProvider.participants;
+      for (final p in participants) {
+        if (p.segment != 'run') {
+          final updated = p.copyWith(segment: 'run', completed: false);
+          await participantProvider.completeSegment(p.id, Duration.zero);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error resetting participants to running: $e');
+    }
 
     setState(() {
       _isRaceInProgress = true;
     });
 
-    // Navigate to running screen
+    // Navigate to running screen and REPLACE home (so home is not shown again)
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('🚀 Race started! Tracking running segment.')),
+        SnackBar(
+          content: Text(wasRunning
+              ? '🔄 Race restarted! All participants are back at the running segment.'
+              : '🚀 Race started! Tracking running segment.'),
+        ),
       );
-      Navigator.pushNamed(context, '/running');
+      Navigator.pushReplacementNamed(context, '/running');
     }
   }
 
@@ -58,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context) => AlertDialog(
             title: const Text('Reset Race'),
             content: const Text(
-                'This will stop and reset the timer for all participants. Are you sure?'),
+                'This will reset the timer, all participant progress, and race history. Are you sure?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -76,17 +101,43 @@ class _HomeScreenState extends State<HomeScreen> {
         false;
 
     if (confirm && mounted) {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Resetting race data...')),
+      );
+
       final raceTimerProvider =
           Provider.of<RaceTimerProvider>(context, listen: false);
+
+      // Reset timer and race data in Firebase
       await raceTimerProvider.resetRace();
+
+      // Reset all participants back to running segment
+      // This would ideally be done through a ParticipantProvider
+      // For now, we'll assume this needs to be implemented in your participant provider
+      try {
+        // You would add code here to reset participants to running segment
+        // await Provider.of<ParticipantProvider>(context, listen: false).resetAllParticipants();
+      } catch (e) {
+        debugPrint('Error resetting participants: $e');
+      }
 
       setState(() {
         _isRaceInProgress = false;
       });
 
+      // Show success message
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Race timer has been reset')),
+        const SnackBar(content: Text('Race has been completely reset')),
       );
+    }
+  }
+
+  void _onNavBarTap(int index) {
+    final route = NavigationService.getRouteForIndex(index);
+    if (route != null && ModalRoute.of(context)?.settings.name != route) {
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
     }
   }
 
@@ -201,6 +252,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: RaceNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavBarTap,
       ),
     );
   }

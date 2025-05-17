@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 import '../../../data/models/result.dart';
 import '../../../data/models/segment_time.dart'; // ✅ Needed for Segment.result
 import '../../../providers/result_provider.dart';
-import '../../../utils/formatters.dart';
-import '../../../services/navigation_service.dart';
+
+import '../../../utils/formatters.dart'; // Import the formatters utility
+import '../../../data/models/result.dart';
 import '../../widgets/race_navigation_bar.dart';
+import '../../../services/navigation_service.dart';
+
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -20,6 +23,7 @@ class _ResultScreenState extends State<ResultScreen> {
   final List<String> categories = ['All', 'Running', 'Swimming', 'Cycling'];
   TextEditingController searchController = TextEditingController();
   Timer? _refreshTimer;
+  int _selectedIndex = 4; // Results tab index (now last)
 
   @override
   void initState() {
@@ -46,13 +50,12 @@ class _ResultScreenState extends State<ResultScreen> {
     super.dispose();
   }
 
-  void _navigateToPage(int index) {
-    final segment = NavigationService.getSegmentByIndex(index);
-    if (segment != Segment.result) {
-      Navigator.pushReplacementNamed(
-        context,
-        NavigationService.getRouteForIndex(index),
-      );
+
+  void _onNavBarTap(int index) {
+    final route = NavigationService.getRouteForIndex(index);
+    if (route != null && ModalRoute.of(context)?.settings.name != route) {
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+
     }
   }
 
@@ -218,6 +221,7 @@ class _ResultScreenState extends State<ResultScreen> {
                     );
                   }
 
+                  // Only filter the displayed results, don't modify participant data
                   final filteredResults = resultProvider.getFilteredResults(
                     searchController.text,
                     categories[selectedCategory],
@@ -254,15 +258,18 @@ class _ResultScreenState extends State<ResultScreen> {
         ),
       ),
       bottomNavigationBar: RaceNavigationBar(
-        currentIndex: NavigationService.getNavigationIndex(Segment.result),
-        onTap: _navigateToPage,
+
+        currentIndex: _selectedIndex,
+        onTap: _onNavBarTap,
+
       ),
     );
   }
 
   Widget _buildResultItem(Result r, String category) {
-    String timeText;
+    String timeText = '-';
     Duration? durationToFormat;
+
     switch (category) {
       case 'Running':
         durationToFormat = r.runTime;
@@ -277,8 +284,9 @@ class _ResultScreenState extends State<ResultScreen> {
         durationToFormat = r.totalTime;
     }
 
-    timeText =
-        durationToFormat != null ? formatDurationHMS(durationToFormat) : '-';
+    if (durationToFormat != null) {
+      timeText = formatRaceTime(durationToFormat);
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

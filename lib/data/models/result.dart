@@ -1,3 +1,5 @@
+import '../../utils/time_utils.dart';
+
 class Result {
   final String participantId;
   final int bib;
@@ -23,9 +25,7 @@ class Result {
     Duration? parse(String key) {
       final value = json[key];
       if (value == null) return null;
-      // Handle both int and double values
-      if (value is num) return Duration(seconds: value.toInt());
-      return null;
+      return TimeUtils.standardizeDuration(value);
     }
 
     return Result(
@@ -44,10 +44,13 @@ class Result {
         'participantId': participantId,
         'bib': bib,
         'name': name,
-        'runTime': runTime?.inSeconds,
-        'swimTime': swimTime?.inSeconds,
-        'cycleTime': cycleTime?.inSeconds,
-        'totalTime': totalTime?.inSeconds,
+        'runTime': runTime != null ? TimeUtils.toMilliseconds(runTime!) : null,
+        'swimTime':
+            swimTime != null ? TimeUtils.toMilliseconds(swimTime!) : null,
+        'cycleTime':
+            cycleTime != null ? TimeUtils.toMilliseconds(cycleTime!) : null,
+        'totalTime':
+            totalTime != null ? TimeUtils.toMilliseconds(totalTime!) : null,
         'rank': rank,
       };
 }

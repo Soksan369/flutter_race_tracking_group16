@@ -6,30 +6,32 @@ class NavigationService {
   static int getNavigationIndex(Segment segment) {
     switch (segment) {
       case Segment.run:
-        return 0;
+        return 1; // Updated index for Running
       case Segment.swim:
-        return 1;
+        return 2; // Updated index for Swimming
       case Segment.cycle:
-        return 2;
-      case Segment.result:
-        return 3; // ✅ MUST be here
+
+        return 3; // Updated index for Cycling
+
       default:
-        return 0;
+        return 0; // Default to Home
     }
   }
 
   static String getRouteForIndex(int index) {
     switch (index) {
       case 0:
-        return '/running';
+        return '/'; // Home
       case 1:
-        return '/swimming';
+        return '/running'; // Running
       case 2:
-        return '/cycling';
+        return '/swimming'; // Swimming
       case 3:
-        return '/result';
+        return '/cycling'; // Cycling
+      case 4:
+        return '/result'; // Results
       default:
-        return '/';
+        return '/'; // Default to Home
     }
   }
 

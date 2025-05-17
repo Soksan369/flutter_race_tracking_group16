@@ -4,17 +4,20 @@ import '../../utils/formatters.dart';
 class TimerDisplay extends StatelessWidget {
   final Duration duration;
   final double fontSize;
+  final bool showMilliseconds;
 
   const TimerDisplay({
     super.key,
     required this.duration,
     this.fontSize = 36,
+    this.showMilliseconds = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Use full time format including milliseconds
-    final String formattedTime = formatDuration(duration);
+    // Use full time format with optional milliseconds
+    final String formattedTime =
+        formatDuration(duration, showMilliseconds: showMilliseconds);
 
     return Container(
       width: double.infinity,

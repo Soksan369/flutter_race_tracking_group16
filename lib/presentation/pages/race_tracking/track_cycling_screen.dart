@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/segment_time.dart';
+import '../../../services/navigation_service.dart';
 import 'base_track_screen.dart';
 
 class TrackCyclingScreen extends StatefulWidget {

@@ -134,18 +134,17 @@ abstract class BaseTrackScreenState<T extends StatefulWidget> extends State<T> {
         return 'Swimming';
       case Segment.cycle:
         return 'Cycling';
-      // ignore: unreachable_switch_default
+      // ignore: unreachable-switch-default
       default:
         return 'Segment';
     }
   }
 
   void _navigateToPage(int index) {
-    final currentIndex = NavigationService.getNavigationIndex(segment);
-    if (index == currentIndex) return;
-
-    Navigator.pushReplacementNamed(
-        context, NavigationService.getRouteForIndex(index));
+    final route = NavigationService.getRouteForIndex(index);
+    if (route != null && ModalRoute.of(context)?.settings.name != route) {
+      Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+    }
   }
 
   @override
