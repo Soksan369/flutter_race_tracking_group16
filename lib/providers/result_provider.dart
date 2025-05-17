@@ -14,7 +14,7 @@ class ResultProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Replace timer with subscription
+
   StreamSubscription<DatabaseEvent>? _splitsSubscription;
   StreamSubscription<DatabaseEvent>? _participantsSubscription;
 
@@ -234,7 +234,7 @@ class ResultProvider with ChangeNotifier {
         return Duration(milliseconds: (time as num).toInt());
       }
     } else if (segmentData is num) {
-      // Direct numeric values - always interpret as milliseconds for consistency
+      // Direct numeric values - always interpret as milliseconds 
       return Duration(milliseconds: segmentData.toInt());
     }
 

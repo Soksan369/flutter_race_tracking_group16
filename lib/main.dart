@@ -8,8 +8,6 @@ import 'presentation/pages/race_results/result_screen.dart';
 import 'presentation/pages/race_tracking/track_running_screen.dart';
 import 'presentation/pages/race_tracking/track_swimming_screen.dart';
 import 'presentation/pages/race_tracking/track_cycling_screen.dart';
-import 'presentation/pages/participants/add_participant.dart';
-import 'presentation/pages/participants/list_participants.dart';
 import 'providers/participant_provider.dart';
 import 'providers/timer_provider.dart';
 import 'providers/segment_time_provider.dart';
@@ -83,8 +81,7 @@ class MyApp extends StatelessWidget {
           '/running': (context) => const TrackRunningScreen(),
           '/swimming': (context) => const TrackSwimmingScreen(),
           '/cycling': (context) => const TrackCyclingScreen(),
-          '/add_participant': (context) => const AddParticipant(),
-          '/list_participants': (context) => const ListParticipants(),
+        
         },
         debugShowCheckedModeBanner: false,
       ),
