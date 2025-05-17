@@ -14,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isRaceInProgress = false;
-  int _selectedIndex = 0; 
+  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Start/reset the race timer
     await raceTimerProvider.startRace();
 
-    // Reset all participants to "run" segment at the start of the race
+    // all participants to "run" segment at the start of the race
     try {
       final participantProvider =
           Provider.of<ParticipantProvider>(context, listen: false);
