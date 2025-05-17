@@ -1,5 +1,3 @@
-// ignore_for_file: deprecated_member_use, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/race_timer_provider.dart';
@@ -16,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool _isRaceInProgress = false;
-  int _selectedIndex = 0; // Home tab index
+  int _selectedIndex = 0; 
 
   @override
   void initState() {
