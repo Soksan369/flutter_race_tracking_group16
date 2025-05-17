@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../data/models/participant.dart';
 import '../../../data/models/segment_time.dart';
-import '../../../services/navigation_service.dart';
+import '../../../data/services/navigation_service.dart';
 import '../../../providers/participant_provider.dart';
 import '../../../providers/result_provider.dart';
 import '../../../providers/race_timer_provider.dart';

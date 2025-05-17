@@ -1,6 +1,6 @@
 // ignore_for_file: unreachable_switch_default
 
-import '../data/models/segment_time.dart';
+import '../models/segment_time.dart';
 
 class NavigationService {
   static int getNavigationIndex(Segment segment) {

@@ -5,7 +5,7 @@ import '../../../data/models/result.dart';
 import '../../../providers/result_provider.dart';
 import '../../../utils/formatters.dart'; 
 import '../../widgets/race_navigation_bar.dart';
-import '../../../services/navigation_service.dart';
+import '../../../data/services/navigation_service.dart';
 
 
 class ResultScreen extends StatefulWidget {

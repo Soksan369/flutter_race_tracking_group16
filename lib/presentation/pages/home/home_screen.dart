@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/race_timer_provider.dart';
 import '../../widgets/race_navigation_bar.dart';
 import '../../../providers/participant_provider.dart';
-import '../../../services/navigation_service.dart';
+import '../../../data/services/navigation_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -1,7 +1,7 @@
 // ignore_for_file: unused_import
 
 import 'package:flutter/material.dart';
-import '../../services/navigation_service.dart';
+import '../../data/services/navigation_service.dart';
 
 class RaceNavigationBar extends StatelessWidget {
   final int currentIndex;
