@@ -10,7 +10,9 @@ class NavigationService {
       case Segment.swim:
         return 2; // Updated index for Swimming
       case Segment.cycle:
+
         return 3; // Updated index for Cycling
+
       default:
         return 0; // Default to Home
     }
@@ -46,4 +48,6 @@ class NavigationService {
         return null;
     }
   }
+
+  static getSegmentByIndex(int index) {}
 }

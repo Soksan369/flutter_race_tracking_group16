@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../data/models/result.dart';
+import '../../../data/models/segment_time.dart'; // ✅ Needed for Segment.result
 import '../../../providers/result_provider.dart';
+
 import '../../../utils/formatters.dart'; // Import the formatters utility
 import '../../../data/models/result.dart';
 import '../../widgets/race_navigation_bar.dart';
 import '../../../services/navigation_service.dart';
+
 
 class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key});
@@ -28,12 +32,10 @@ class _ResultScreenState extends State<ResultScreen> {
       setState(() {});
     });
 
-    // Load results when screen initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ResultProvider>(context, listen: false).loadResults();
     });
 
-    // Set up polling for updates
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) {
         Provider.of<ResultProvider>(context, listen: false).loadResults();
@@ -48,10 +50,12 @@ class _ResultScreenState extends State<ResultScreen> {
     super.dispose();
   }
 
+
   void _onNavBarTap(int index) {
     final route = NavigationService.getRouteForIndex(index);
     if (route != null && ModalRoute.of(context)?.settings.name != route) {
       Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+
     }
   }
 
@@ -63,7 +67,6 @@ class _ResultScreenState extends State<ResultScreen> {
         child: Column(
           children: [
             const SizedBox(height: 24),
-            // Title
             const Text(
               'Race Results',
               style: TextStyle(
@@ -73,8 +76,6 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Category filter
             SizedBox(
               height: 44,
               child: ListView.builder(
@@ -112,10 +113,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 },
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // Search bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
@@ -141,10 +139,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Table header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -195,11 +190,8 @@ class _ResultScreenState extends State<ResultScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
             const Divider(height: 1),
-
-            // Results list
             Expanded(
               child: Consumer<ResultProvider>(
                 builder: (context, resultProvider, child) {
@@ -266,8 +258,10 @@ class _ResultScreenState extends State<ResultScreen> {
         ),
       ),
       bottomNavigationBar: RaceNavigationBar(
+
         currentIndex: _selectedIndex,
         onTap: _onNavBarTap,
+
       ),
     );
   }
@@ -298,7 +292,6 @@ class _ResultScreenState extends State<ResultScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       child: Row(
         children: [
-          // Rank column
           SizedBox(
             width: 60,
             child: Text(
@@ -309,8 +302,6 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
           ),
-
-          // Name column
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,8 +316,6 @@ class _ResultScreenState extends State<ResultScreen> {
               ],
             ),
           ),
-
-          // Time column
           SizedBox(
             width: 100,
             child: Text(
@@ -337,8 +326,6 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
           ),
-
-          // Bib column (for all categories)
           SizedBox(
             width: 60,
             child: Text(
