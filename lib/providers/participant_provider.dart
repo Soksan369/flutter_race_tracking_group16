@@ -31,16 +31,9 @@ class ParticipantProvider with ChangeNotifier {
     _error = null;
     notifyListeners();
 
-    // Cancel any existing timer
-    _refreshTimer?.cancel();
+    
 
-    // Fetch participants initially
-    _fetchParticipantsBySegment(segment);
-
-    // Set up periodic refresh every 3 seconds
-    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _fetchParticipantsBySegment(segment);
-    });
+    
   }
 
   // Private method to fetch participants for a specific segment
