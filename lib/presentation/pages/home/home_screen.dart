@@ -224,31 +224,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
-              const SizedBox(height: 40),
-
-              // Manage button - text button with icon
-              ElevatedButton.icon(
-                onPressed: () =>
-                    Navigator.pushNamed(context, '/list_participants'),
-                icon: const Icon(Icons.people),
-                label: const Text(
-                  'MANAGE PARTICIPANTS',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: const Color(0xFF3366FF),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
